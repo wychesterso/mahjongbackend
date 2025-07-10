@@ -7,6 +7,7 @@ import com.mahjong.mahjongserver.domain.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.core.turn.Turn;
 import com.mahjong.mahjongserver.domain.player.data.Seat;
+import com.mahjong.mahjongserver.messaging.GameEventPublisher;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -17,6 +18,9 @@ import java.util.List;
  */
 public class TurnManager {
     private final List<Player> playerList;
+    private final GameEventPublisher gameEventPublisher;
+    private final String roomId;
+
     private Player currentPlayer = null;
     private final List<Player> winners = new ArrayList<>();
     private Turn currentTurn = null;
@@ -28,12 +32,14 @@ public class TurnManager {
      * Creates a turn manager instance.
      * @param playerList the players participating in the round.
      */
-    public TurnManager(List<Player> playerList) {
+    public TurnManager(List<Player> playerList, GameEventPublisher gameEventPublisher, String roomId) {
         if (playerList.size() != 4) {
             throw new IllegalArgumentException("Incorrect amount of players!");
         }
         playerList.sort(Comparator.comparing(Player::getSeat));
         this.playerList = playerList;
+        this.gameEventPublisher = gameEventPublisher;
+        this.roomId = roomId;
     }
 
     public Player getCurrentPlayer() {
@@ -46,7 +52,7 @@ public class TurnManager {
      */
     public Turn initializeTurn() {
         return new Turn(currentPlayer, getOtherPlayers(), boardState(),
-                pileManager.getDiscardPile().getDiscardedTiles());
+                pileManager.getDiscardPile().getDiscardedTiles(), gameEventPublisher, roomId);
     }
 
     /**
@@ -68,31 +74,15 @@ public class TurnManager {
             }
             for (int i = 0; i < numInitialTiles; i++) {
                 Tile newTile = pileManager.drawTile();
+
+                // replace flower tiles
                 while (newTile.getTileType() == TileType.FLOWER_SEASON
                         || newTile.getTileType() == TileType.FLOWER_PLANT) {
-                    Prompter.printLine();
-                    Prompter.printLine(player.toStringWithSeat() + " drew flower tile: " + newTile);
                     player.getHandManager().addFlower(newTile);
-                    if (player.getHandManager().getRevealedHand().newToiFormed()) {
-                        Prompter.printLine(player.toStringWithSeat() + " formed a new type of flowers!");
-                        for (Player otherPlayer : getOtherPlayers(player)) {
-                            otherPlayer.deductScore(10);
-                            Prompter.printLine(otherPlayer.toStringWithSeat() + ": -10");
-                        }
-                        player.addScore(30);
-                        Prompter.printLine(player.toStringWithSeat() + ": +30");
-                    }
-                    if (player.getHandManager().getRevealedHand().newGrassFormed()) {
-                        Prompter.printLine(player.toStringWithSeat() + " formed a new set of flowers!");
-                        for (Player otherPlayer : getOtherPlayers(player)) {
-                            otherPlayer.deductScore(5);
-                            Prompter.printLine(otherPlayer.toStringWithSeat() + ": -5");
-                        }
-                        player.addScore(15);
-                        Prompter.printLine(player.toStringWithSeat() + ": +15");
-                    }
+                    handleFlowerTile(player, newTile);
                     newTile = pileManager.drawBonusTile();
                 }
+
                 player.getHandManager().addToHand(newTile);
             }
         }
@@ -109,8 +99,44 @@ public class TurnManager {
                 turnEnder = TurnEnder.END_GAME_DRAW;
             }
         }
-        Prompter.printLine();
         return turnEnder;
+    }
+
+    /**
+     * Used for handling when a player draws a flower tile.
+     * @param player the player that drew the tile.
+     * @param flowerTile the tile that was drawn.
+     * @throws EmptyPileException if the pile is empty.
+     */
+    private void handleFlowerTile(Player player, Tile flowerTile) throws EmptyPileException {
+        // reveal flower tile to all
+        gameEventPublisher.sendLog(roomId, player.toStringWithSeat() + " drew flower tile: "
+                + flowerTile);
+
+        // handle flower sets
+        if (player.getHandManager().getRevealedHand().newToiFormed()) {
+            stealScore(player, "formed a new type of flowers", 10);
+        }
+        if (player.getHandManager().getRevealedHand().newGrassFormed()) {
+            stealScore(player, "formed a new set of flowers", 5);
+        }
+    }
+
+    /**
+     * Used when one player attains a condition that allows them to take score from the other 3 players.
+     * @param player the player who takes the score.
+     * @param message the message corresponding to the condition.
+     * @param amount the score to take from each player.
+     */
+    private void stealScore(Player player, String message, int amount) {
+        gameEventPublisher.sendLog(roomId, player.toStringWithSeat() + " " + message + "!");
+
+        for (Player otherPlayer : getOtherPlayers(player)) {
+            otherPlayer.deductScore(amount);
+            gameEventPublisher.sendLog(roomId, otherPlayer.toStringWithSeat() + ": -" + amount);
+        }
+        player.addScore(amount * 3);
+        gameEventPublisher.sendLog(roomId, player.toStringWithSeat() + ": +" + amount * 3);
     }
 
     /**
@@ -125,41 +151,27 @@ public class TurnManager {
         switch (prevTurnEnder) {
             case DRAW_FLOWER -> {
                 lastEvent = "flower";
-                Prompter.printLine();
-                Prompter.printLine(currentPlayer.toStringWithSeat() + " drew flower tile: "
-                        + currentTurn.getDrawnTile());
-                if (currentPlayer.getHandManager().getRevealedHand().newToiFormed()) {
-                    Prompter.printLine(currentPlayer.toStringWithSeat() + " formed a new type of flowers!");
-                    for (Player otherPlayer : getOtherPlayers()) {
-                        otherPlayer.deductScore(10);
-                        Prompter.printLine(otherPlayer.toStringWithSeat() + ": -10");
-                    }
-                    currentPlayer.addScore(30);
-                    Prompter.printLine(currentPlayer.toStringWithSeat() + ": +30");
-                }
-                if (currentPlayer.getHandManager().getRevealedHand().newGrassFormed()) {
-                    Prompter.printLine(currentPlayer.toStringWithSeat() + " formed a new set of flowers!");
-                    for (Player otherPlayer : getOtherPlayers()) {
-                        otherPlayer.deductScore(5);
-                        Prompter.printLine(otherPlayer.toStringWithSeat() + ": -5");
-                    }
-                    currentPlayer.addScore(15);
-                    Prompter.printLine(currentPlayer.toStringWithSeat() + ": +15");
-                }
+                handleFlowerTile(currentPlayer, currentTurn.getDrawnTile());
+
+                // check for flower win
                 if (currentPlayer.getHandManager().getRevealedHand().getFlowers().size() == 8) {
                     if (currentPlayer.decideWin(boardState(currentPlayer))) {
                         winners.add(currentPlayer);
                         return TurnEnder.END_GAME_WIN_SELFDRAW;
                     }
                 }
+
+                // draw replacement tile and restart turn
                 return startTurnBonusDraw();
             }
+
             case BRIGHT_KONG, DARK_KONG -> {
                 if (lastEvent.equals("kong") || lastEvent.equals("double kong")) {
                     lastEvent = "double kong";
                 }
                 return startTurnBonusDraw();
             }
+
             case DISCARD_TILE -> {
                 lastEvent = "discard";
                 discardCount += 1;
@@ -186,8 +198,8 @@ public class TurnManager {
                     if (player.getHandManager().checkBrightKongFromOpponent(discardedTile)) {
                         if (player.decideBrightKongNoDraw(discardedTile, boardState(player))) {
                             currentPlayer = player;
-                            Prompter.printLine();
-                            Prompter.printLine(currentPlayer.toStringWithSeat() + " performed Bright Kong: "
+                            gameEventPublisher.sendLog(roomId, currentPlayer.toStringWithSeat()
+                                    + " performed Bright Kong: "
                                     + discardedTile + discardedTile + discardedTile + discardedTile);
                             return startTurnBrightKongFromOpponent();
                         }
@@ -203,8 +215,8 @@ public class TurnManager {
                             for (int i = 0; i < 2; i++) {
                                 existingTiles.add(discardedTile);
                             }
-                            Prompter.printLine();
-                            Prompter.printLine(currentPlayer.toStringWithSeat() + " performed Pong: "
+                            gameEventPublisher.sendLog(roomId, currentPlayer.toStringWithSeat()
+                                    + " performed Pong: "
                                     + discardedTile + discardedTile + discardedTile);
                             return startTurnTakeTile(existingTiles);
                         }
@@ -230,9 +242,8 @@ public class TurnManager {
                         for (Tile tile : pickedCombo) {
                             comboString.append(tile);
                         }
-                        Prompter.printLine();
-                        Prompter.printLine(currentPlayer.toStringWithSeat() + " performed Sheung: "
-                                + comboString);
+                        gameEventPublisher.sendLog(roomId, currentPlayer.toStringWithSeat()
+                                + " performed Sheung: " + comboString);
                         pickedCombo.remove(discardedTile);
                         return startTurnTakeTile(pickedCombo);
                     }

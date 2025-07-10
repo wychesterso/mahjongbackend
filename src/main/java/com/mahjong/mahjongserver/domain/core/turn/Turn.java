@@ -2,11 +2,11 @@ package com.mahjong.mahjongserver.domain.core.turn;
 
 import com.mahjong.mahjongserver.domain.board.HandManager;
 import com.mahjong.mahjongserver.domain.core.InvalidKongException;
-import com.mahjong.mahjongserver.domain.core.Prompter;
 import com.mahjong.mahjongserver.domain.core.turn.data.TurnEnder;
 import com.mahjong.mahjongserver.domain.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.board.tile.TileType;
 import com.mahjong.mahjongserver.domain.player.Player;
+import com.mahjong.mahjongserver.messaging.GameEventPublisher;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,20 +18,25 @@ public class Turn {
     private final Player player;
     private final List<Player> otherPlayers;
     private final String boardState;
+    private final List<Tile> discardedTiles;
+    private final GameEventPublisher gameEventPublisher;
+    private final String roomId;
+
     private Tile drawnTile = null;
     private Tile discardTile = null;
-    private final List<Tile> discardedTiles;
 
     /**
      * Starts a new turn with a specified player.
      * @param player the player in control of the turn.
      */
     public Turn(Player player, List<Player> otherPlayers, String boardState,
-                List<Tile> discardedTiles) {
+                List<Tile> discardedTiles, GameEventPublisher gameEventPublisher, String roomId) {
         this.player = player;
         this.otherPlayers = otherPlayers;
         this.boardState = boardState;
         this.discardedTiles = new ArrayList<>(discardedTiles);
+        this.gameEventPublisher = gameEventPublisher;
+        this.roomId = roomId;
     }
 
     /**
@@ -100,22 +105,23 @@ public class Turn {
         for (Tile t : getHandManager().getHand().getTiles()) {
             if (getHandManager().checkDarkKong(t)) {
                 if (player.decideDarkKong(t, boardState)) {
-                    Prompter.printLine();
-                    Prompter.printLine(player.toStringWithSeat() + " performed Dark Kong: "
+                    gameEventPublisher.sendLog(roomId,player.toStringWithSeat() + " performed Dark Kong: "
                             + "🀫🀫🀫🀫");
                     handleDarkKong(t);
+
+                    // score change
                     for (Player otherPlayer : otherPlayers) {
                         otherPlayer.deductScore(5);
-                        Prompter.printLine(otherPlayer.toStringWithSeat() + ": -5");
+                        gameEventPublisher.sendLog(roomId, otherPlayer.toStringWithSeat() + ": -5");
                     }
                     player.addScore(15);
-                    Prompter.printLine(player.toStringWithSeat() + ": +15");
+                    gameEventPublisher.sendLog(roomId, player.toStringWithSeat() + ": +15");
+
                     return TurnEnder.DARK_KONG;
                 }
             } else if (getHandManager().checkBrightKongSelfDraw(t)) {
                 if (player.decideBrightKong(t, boardState)) {
-                    Prompter.printLine();
-                    Prompter.printLine(player.toStringWithSeat() + " performed Bright Kong: "
+                    gameEventPublisher.sendLog(roomId, player.toStringWithSeat() + " performed Bright Kong: "
                             + t + t + t + t);
                     player.getHandManager().discardTile(t);
                     handleBrightKong(t);
@@ -133,7 +139,7 @@ public class Turn {
     public TurnEnder startTurnFirstDraw() throws InvalidKongException {
         // CHECK WIN
         if (checkWin()) {
-            // there is about a 0.000001% chance of this code ever executing during a round :)
+            // 天糊! there is about a 0.000001% chance of this code ever executing during a round :)
             return TurnEnder.END_GAME_WIN_SELFDRAW;
         }
 
