@@ -3,6 +3,7 @@ package com.mahjong.mahjongserver.domain.player;
 import com.mahjong.mahjongserver.domain.board.HandManager;
 import com.mahjong.mahjongserver.domain.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.player.data.Seat;
+import com.mahjong.mahjongserver.dto.BoardStateDTO;
 
 import java.util.List;
 
@@ -118,7 +119,7 @@ public abstract class Player {
      * @param boardState the current board state.
      * @return true iff the win condition is accepted, false otherwise.
      */
-    public abstract boolean decideWin(String boardState);
+    public abstract boolean decideWin(BoardStateDTO boardState);
 
     /**
      * Makes the player choose whether to accept a win condition when taking a tile from opponent.
@@ -126,7 +127,7 @@ public abstract class Player {
      * @param boardState the current board state.
      * @return true iff the win condition is accepted, false otherwise.
      */
-    public abstract boolean decideWin(Tile tile, String boardState);
+    public abstract boolean decideWin(Tile tile, BoardStateDTO boardState);
 
     /**
      * Makes the player choose whether to accept a Sheung from opponent.
@@ -134,7 +135,7 @@ public abstract class Player {
      * @param boardState the current board state.
      * @return true iff the Sheung is accepted, false otherwise.
      */
-    public abstract boolean decideSheung(Tile tile, String boardState);
+    public abstract boolean decideSheung(Tile tile, BoardStateDTO boardState);
 
     /**
      * Makes the player choose whether to accept a Pong from opponent.
@@ -142,7 +143,7 @@ public abstract class Player {
      * @param boardState the current board state.
      * @return true iff the Pong is accepted, false otherwise.
      */
-    public abstract boolean decidePong(Tile tile, String boardState);
+    public abstract boolean decidePong(Tile tile, BoardStateDTO boardState);
 
     /**
      * Makes the player choose whether to accept a Dark Kong.
@@ -150,7 +151,7 @@ public abstract class Player {
      * @param boardState the current board state.
      * @return true iff the Dark Kong is accepted, false otherwise.
      */
-    public abstract boolean decideDarkKong(Tile tile, String boardState);
+    public abstract boolean decideDarkKong(Tile tile, BoardStateDTO boardState);
 
     /**
      * Makes the player choose whether to accept a Bright Kong.
@@ -158,7 +159,7 @@ public abstract class Player {
      * @param boardState the current board state.
      * @return true iff the Bright Kong is accepted, false otherwise.
      */
-    public abstract boolean decideBrightKong(Tile tile, String boardState);
+    public abstract boolean decideBrightKong(Tile tile, BoardStateDTO boardState);
 
     /**
      * Makes the player choose whether to accept a Bright Kong from a tile discarded by the
@@ -167,7 +168,7 @@ public abstract class Player {
      * @param boardState the current board state.
      * @return true iff the Bright Kong is accepted, false otherwise.
      */
-    public abstract boolean decideBrightKongNoDraw(Tile tile, String boardState);
+    public abstract boolean decideBrightKongNoDraw(Tile tile, BoardStateDTO boardState);
 
     /**
      * Makes the player choose which Sheung combo to accept.
@@ -181,14 +182,14 @@ public abstract class Player {
      * @param boardState the current board state.
      * @return the tile that is discarded.
      */
-    public abstract Tile pickDiscardTile(String boardState, List<Tile> discardedTiles);
+    public abstract Tile pickDiscardTile(BoardStateDTO boardState, List<Tile> discardedTiles);
 
     /**
      * Makes the player choose a tile to discard, when no tile has been drawn during the turn.
      * @param boardState the current board state.
      * @return the tile that is discarded.
      */
-    public abstract Tile pickDiscardTileNoDraw(String boardState, List<Tile> discardedTiles);
+    public abstract Tile pickDiscardTileNoDraw(BoardStateDTO boardState, List<Tile> discardedTiles);
 
     /**
      * Returns a string representation of the player.

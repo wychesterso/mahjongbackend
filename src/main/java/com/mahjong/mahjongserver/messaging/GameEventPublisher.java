@@ -22,10 +22,21 @@ public class GameEventPublisher {
         messagingTemplate.convertAndSend("/topic/room/" + roomId, payload);
     }
 
+    /**
+     * Send a prompt for action to a specified player.
+     * @param playerId the id of the specified player.
+     * @param type the prompt type.
+     * @param data the prompt data.
+     */
     public void sendPrompt(String playerId, String type, Object data) {
         sendToPlayer(playerId, Map.of("type", type, "data", data));
     }
 
+    /**
+     * Send a broadcast message to all players.
+     * @param roomId the id of the current room.
+     * @param message the message to broadcast.
+     */
     public void sendLog(String roomId, String message) {
         sendToAll(roomId, Map.of("type", "log", "message", message));
     }

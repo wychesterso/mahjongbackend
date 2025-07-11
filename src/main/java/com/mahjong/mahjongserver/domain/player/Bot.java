@@ -2,17 +2,25 @@ package com.mahjong.mahjongserver.domain.player;
 
 import com.mahjong.mahjongserver.domain.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.board.tile.TileType;
-import com.mahjong.mahjongserver.domain.core.Prompter;
+import com.mahjong.mahjongserver.dto.BoardStateDTO;
+import com.mahjong.mahjongserver.messaging.GameEventPublisher;
 
 import java.util.*;
 
 public class Bot extends Player {
-    public Bot(String name) {
+    private final GameEventPublisher gameEventPublisher;
+    private final String roomId;
+
+    public Bot(String name, GameEventPublisher gameEventPublisher, String roomId) {
         super(name);
+        this.gameEventPublisher = gameEventPublisher;
+        this.roomId = roomId;
     }
 
-    public Bot(String name, int score) {
+    public Bot(String name, int score, GameEventPublisher gameEventPublisher, String roomId) {
         super(name, score);
+        this.gameEventPublisher = gameEventPublisher;
+        this.roomId = roomId;
     }
 
     private void pause() {
@@ -25,35 +33,35 @@ public class Bot extends Player {
     }
 
     @Override
-    public boolean decideWin(String boardState) {
+    public boolean decideWin(BoardStateDTO boardState) {
         return true;
     }
 
     @Override
-    public boolean decideWin(Tile tile, String boardState) {
+    public boolean decideWin(Tile tile, BoardStateDTO boardState) {
         return true;
     }
 
     @Override
-    public boolean decideSheung(Tile tile, String boardState) {
+    public boolean decideSheung(Tile tile, BoardStateDTO boardState) {
         pause();
         return decideBrightKong(tile, boardState);
     }
 
     @Override
-    public boolean decidePong(Tile tile, String boardState) {
+    public boolean decidePong(Tile tile, BoardStateDTO boardState) {
         pause();
         return true;
     }
 
     @Override
-    public boolean decideDarkKong(Tile tile, String boardState) {
+    public boolean decideDarkKong(Tile tile, BoardStateDTO boardState) {
         pause();
         return decideBrightKong(tile, boardState);
     }
 
     @Override
-    public boolean decideBrightKong(Tile tile, String boardState) {
+    public boolean decideBrightKong(Tile tile, BoardStateDTO boardState) {
         pause();
         List<Tile> tilesInHand = new ArrayList<>(getHandManager().getHand().getTiles());
         List<Tile> groupedTiles = new ArrayList<>();
@@ -62,7 +70,7 @@ public class Bot extends Player {
     }
 
     @Override
-    public boolean decideBrightKongNoDraw(Tile tile, String boardState) {
+    public boolean decideBrightKongNoDraw(Tile tile, BoardStateDTO boardState) {
         pause();
         return decideBrightKong(tile, boardState);
     }
@@ -74,13 +82,12 @@ public class Bot extends Player {
     }
 
     @Override
-    public Tile pickDiscardTile(String boardState, List<Tile> discardedTiles) {
+    public Tile pickDiscardTile(BoardStateDTO boardState, List<Tile> discardedTiles) {
         pause();
         List<Tile> tilesInHand = getHandManager().getHand().getTiles();
         List<Tile> discardOptions = groupTiles(tilesInHand, discardedTiles);
         Tile discardTile = discardOptions.getFirst();
-        Prompter.printLine();
-        Prompter.printLine(this.toStringWithSeat() + " discarded " + discardTile);
+        gameEventPublisher.sendLog(roomId, this.toStringWithSeat() + " discarded " + discardTile);
         return discardTile;
     }
 
@@ -296,7 +303,7 @@ public class Bot extends Player {
     }
 
     @Override
-    public Tile pickDiscardTileNoDraw(String boardState, List<Tile> discardedTiles) {
+    public Tile pickDiscardTileNoDraw(BoardStateDTO boardState, List<Tile> discardedTiles) {
         pause();
         return pickDiscardTile(boardState, discardedTiles);
     }

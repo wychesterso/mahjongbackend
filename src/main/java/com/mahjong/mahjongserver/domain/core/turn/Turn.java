@@ -6,6 +6,7 @@ import com.mahjong.mahjongserver.domain.core.turn.data.TurnEnder;
 import com.mahjong.mahjongserver.domain.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.board.tile.TileType;
 import com.mahjong.mahjongserver.domain.player.Player;
+import com.mahjong.mahjongserver.dto.BoardStateDTO;
 import com.mahjong.mahjongserver.messaging.GameEventPublisher;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import java.util.List;
 public class Turn {
     private final Player player;
     private final List<Player> otherPlayers;
-    private final String boardState;
+    private final BoardStateDTO boardState;
     private final List<Tile> discardedTiles;
     private final GameEventPublisher gameEventPublisher;
     private final String roomId;
@@ -29,7 +30,7 @@ public class Turn {
      * Starts a new turn with a specified player.
      * @param player the player in control of the turn.
      */
-    public Turn(Player player, List<Player> otherPlayers, String boardState,
+    public Turn(Player player, List<Player> otherPlayers, BoardStateDTO boardState,
                 List<Tile> discardedTiles, GameEventPublisher gameEventPublisher, String roomId) {
         this.player = player;
         this.otherPlayers = otherPlayers;

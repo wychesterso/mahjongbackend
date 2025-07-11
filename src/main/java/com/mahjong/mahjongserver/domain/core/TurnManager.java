@@ -7,11 +7,13 @@ import com.mahjong.mahjongserver.domain.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.core.turn.Turn;
 import com.mahjong.mahjongserver.domain.player.data.Seat;
+import com.mahjong.mahjongserver.dto.BoardStateDTO;
 import com.mahjong.mahjongserver.messaging.GameEventPublisher;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A managing class that represents a game round, handling turns during a round.
@@ -366,49 +368,35 @@ public class TurnManager {
      * Gets the board state from the perspective of the current player.
      * @return the string output of the board state.
      */
-    public String boardState() {
-        StringBuilder output = new StringBuilder();
+    public BoardStateDTO boardState() {
         List<Player> otherPlayers = getOtherPlayers();
-        output.append("Discards:\n").append(pileManager.getDiscardPile())
-                .append("\n")
-                .append(Prompter.getLine())
-                .append("\n")
-                .append("Left:   ")
-                .append(otherPlayers.get(2).getHandManager().toStringOpponentView())
-                .append("\n")
-                .append("Across: ")
-                .append(otherPlayers.get(1).getHandManager().toStringOpponentView())
-                .append("\n")
-                .append("Right:  ")
-                .append(otherPlayers.get(0).getHandManager().toStringOpponentView())
-                .append("\n\n")
-                .append("Remaining Tiles: ")
-                .append(pileManager.getUnrevealedPile().getRemainingTileCount());
-        return output.toString();
+
+        return new BoardStateDTO(
+                pileManager.getDiscardPile().getDiscardedTiles(),
+                Map.of(
+                        "left", otherPlayers.get(2).getHandManager().toOpponentView(),
+                        "across", otherPlayers.get(1).getHandManager().toOpponentView(),
+                        "right", otherPlayers.get(0).getHandManager().toOpponentView()
+                ),
+                pileManager.getUnrevealedPile().getRemainingTileCount()
+        );
     }
 
     /**
      * Gets the board state from the perspective of the specified player.
      * @return the string output of the board state.
      */
-    public String boardState(Player player) {
-        StringBuilder output = new StringBuilder();
+    public BoardStateDTO boardState(Player player) {
         List<Player> otherPlayers = getOtherPlayers(player);
-        output.append("Discards:\n").append(pileManager.getDiscardPile())
-                .append("\n")
-                .append(Prompter.getLine())
-                .append("\n")
-                .append("Left:   ")
-                .append(otherPlayers.get(2).getHandManager().toStringOpponentView())
-                .append("\n")
-                .append("Across: ")
-                .append(otherPlayers.get(1).getHandManager().toStringOpponentView())
-                .append("\n")
-                .append("Right:  ")
-                .append(otherPlayers.get(0).getHandManager().toStringOpponentView())
-                .append("\n\n")
-                .append("Remaining Tiles: ")
-                .append(pileManager.getUnrevealedPile().getRemainingTileCount());
-        return output.toString();
+
+        return new BoardStateDTO(
+                pileManager.getDiscardPile().getDiscardedTiles(),
+                Map.of(
+                        "left", otherPlayers.get(2).getHandManager().toOpponentView(),
+                        "across", otherPlayers.get(1).getHandManager().toOpponentView(),
+                        "right", otherPlayers.get(0).getHandManager().toOpponentView()
+                ),
+                pileManager.getUnrevealedPile().getRemainingTileCount()
+        );
     }
 }

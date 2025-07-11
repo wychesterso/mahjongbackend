@@ -6,6 +6,7 @@ import com.mahjong.mahjongserver.domain.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.board.tile.TileType;
 import com.mahjong.mahjongserver.domain.core.InvalidKongException;
 import com.mahjong.mahjongserver.domain.score.WinChecker;
+import com.mahjong.mahjongserver.dto.OpponentViewDTO;
 
 import java.util.*;
 
@@ -512,5 +513,15 @@ public class HandManager {
             return getHand().toStringOpponentView();
         }
         return getRevealedHand().toStringOpponentView() + "    " + getHand().toStringOpponentView();
+    }
+
+    public OpponentViewDTO toOpponentView() {
+        return new OpponentViewDTO(
+                this.hand.getTiles().size(),
+                this.revealedHand.getGroups(),
+                this.revealedHand.getBrightKongs(),
+                this.revealedHand.getDarkKongs(),
+                this.revealedHand.getFlowers()
+        );
     }
 }

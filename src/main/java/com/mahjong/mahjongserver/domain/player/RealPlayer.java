@@ -2,6 +2,7 @@ package com.mahjong.mahjongserver.domain.player;
 
 import com.mahjong.mahjongserver.domain.board.tile.Tile;
 import com.mahjong.mahjongserver.auth.UserAccount;
+import com.mahjong.mahjongserver.dto.BoardStateDTO;
 import com.mahjong.mahjongserver.service.PendingDecisionService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -28,43 +29,43 @@ public class RealPlayer extends Player {
     }
 
     @Override
-    public boolean decideWin(String boardState) {
+    public boolean decideWin(BoardStateDTO boardState) {
         // tbc
         throw new UnsupportedOperationException("Frontend decision");
     }
 
     @Override
-    public boolean decideWin(Tile tile, String boardState) {
+    public boolean decideWin(Tile tile, BoardStateDTO boardState) {
         // tbc
         throw new UnsupportedOperationException("Frontend decision");
     }
 
     @Override
-    public boolean decideSheung(Tile tile, String boardState) {
+    public boolean decideSheung(Tile tile, BoardStateDTO boardState) {
         // tbc
         throw new UnsupportedOperationException("Frontend decision");
     }
 
     @Override
-    public boolean decidePong(Tile tile, String boardState) {
+    public boolean decidePong(Tile tile, BoardStateDTO boardState) {
         // tbc
         throw new UnsupportedOperationException("Frontend decision");
     }
 
     @Override
-    public boolean decideDarkKong(Tile tile, String boardState) {
+    public boolean decideDarkKong(Tile tile, BoardStateDTO boardState) {
         // tbc
         throw new UnsupportedOperationException("Frontend decision");
     }
 
     @Override
-    public boolean decideBrightKong(Tile tile, String boardState) {
+    public boolean decideBrightKong(Tile tile, BoardStateDTO boardState) {
         // tbc
         throw new UnsupportedOperationException("Frontend decision");
     }
 
     @Override
-    public boolean decideBrightKongNoDraw(Tile tile, String boardState) {
+    public boolean decideBrightKongNoDraw(Tile tile, BoardStateDTO boardState) {
         // tbc
         throw new UnsupportedOperationException("Frontend decision");
     }
@@ -76,13 +77,13 @@ public class RealPlayer extends Player {
     }
 
     @Override
-    public Tile pickDiscardTile(String boardState, List<Tile> discardedTiles) {
+    public Tile pickDiscardTile(BoardStateDTO boardState, List<Tile> discardedTiles) {
         // tbc
         throw new UnsupportedOperationException("Frontend decision");
     }
 
     @Override
-    public Tile pickDiscardTileNoDraw(String boardState, List<Tile> discardedTiles) {
+    public Tile pickDiscardTileNoDraw(BoardStateDTO boardState, List<Tile> discardedTiles) {
         // tbc
         throw new UnsupportedOperationException("Frontend decision");
     }
