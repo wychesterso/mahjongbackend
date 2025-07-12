@@ -2,10 +2,9 @@ package com.mahjong.mahjongserver.domain.board.pile;
 
 import com.mahjong.mahjongserver.domain.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.board.tile.TileType;
-import com.mahjong.mahjongserver.domain.core.EmptyPileException;
+import com.mahjong.mahjongserver.domain.game.EmptyPileException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 

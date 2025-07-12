@@ -4,6 +4,7 @@ import com.mahjong.mahjongserver.domain.board.PileManager;
 import com.mahjong.mahjongserver.domain.board.tile.TileType;
 import com.mahjong.mahjongserver.domain.core.turn.data.TurnEnder;
 import com.mahjong.mahjongserver.domain.board.tile.Tile;
+import com.mahjong.mahjongserver.domain.game.EmptyPileException;
 import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.core.turn.Turn;
 import com.mahjong.mahjongserver.domain.player.data.Seat;

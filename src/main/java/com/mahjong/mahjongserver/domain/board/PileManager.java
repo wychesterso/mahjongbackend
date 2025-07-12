@@ -3,7 +3,7 @@ package com.mahjong.mahjongserver.domain.board;
 import com.mahjong.mahjongserver.domain.board.pile.DiscardPile;
 import com.mahjong.mahjongserver.domain.board.pile.UnrevealedPile;
 import com.mahjong.mahjongserver.domain.board.tile.Tile;
-import com.mahjong.mahjongserver.domain.core.EmptyPileException;
+import com.mahjong.mahjongserver.domain.game.EmptyPileException;
 
 /**
  * A managing class for the game's piles.

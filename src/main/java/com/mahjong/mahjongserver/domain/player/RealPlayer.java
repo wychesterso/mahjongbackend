@@ -3,25 +3,33 @@ package com.mahjong.mahjongserver.domain.player;
 import com.mahjong.mahjongserver.domain.board.tile.Tile;
 import com.mahjong.mahjongserver.auth.UserAccount;
 import com.mahjong.mahjongserver.dto.BoardStateDTO;
+import com.mahjong.mahjongserver.messaging.GameEventPublisher;
 import com.mahjong.mahjongserver.service.PendingDecisionService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
 public class RealPlayer extends Player {
+    private final GameEventPublisher gameEventPublisher;
+    private final String roomId;
     private final UserAccount account;
 
     @Autowired
     private PendingDecisionService pendingDecisionService;
 
-    public RealPlayer(UserAccount account, String name) {
+    public RealPlayer(String name, UserAccount account, GameEventPublisher gameEventPublisher, String roomId) {
         super(name);
         this.account = account;
+        this.gameEventPublisher = gameEventPublisher;
+        this.roomId = roomId;
     }
 
-    public RealPlayer(UserAccount account, String name, int score) {
+    public RealPlayer(String name, int score, UserAccount account, GameEventPublisher gameEventPublisher,
+                      String roomId) {
         super(name, score);
         this.account = account;
+        this.gameEventPublisher = gameEventPublisher;
+        this.roomId = roomId;
     }
 
     public UserAccount getAccount() {
