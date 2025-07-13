@@ -1,25 +1,52 @@
 package com.mahjong.mahjongserver.dto;
 
-import com.mahjong.mahjongserver.domain.board.hand.RevealedHand;
-import com.mahjong.mahjongserver.domain.board.tile.Tile;
+import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 
 import java.util.List;
 
 public class RevealedHandDTO {
-    private final List<List<Tile>> groups;
+    private final List<List<Tile>> sheungs;
+    private final List<List<Tile>> pongs;
     private final List<List<Tile>> brightKongs;
-    private final List<List<Tile>> darkKongs;
+    private final List<List<Tile>> darkKongs; // only populate for self
+    private final int darkKongCount;
     private final List<Tile> flowers;
 
-    public RevealedHandDTO(RevealedHand revealedHand) {
-        this.groups = revealedHand.getGroups();
-        this.brightKongs = revealedHand.getBrightKongs();
-        this.darkKongs = revealedHand.getDarkKongs();
-        this.flowers = revealedHand.getFlowers();
+    public RevealedHandDTO(List<List<Tile>> sheungs,
+                           List<List<Tile>> pongs,
+                           List<List<Tile>> brightKongs,
+                           List<List<Tile>> darkKongs,
+                           int darkKongCount,
+                           List<Tile> flowers) {
+        this.sheungs = sheungs;
+        this.pongs = pongs;
+        this.brightKongs = brightKongs;
+        this.darkKongs = darkKongs;
+        this.darkKongCount = darkKongCount;
+        this.flowers = flowers;
     }
 
-    public List<List<Tile>> getGroups() { return groups; }
-    public List<List<Tile>> getBrightKongs() { return brightKongs; }
-    public List<List<Tile>> getDarkKongs() { return darkKongs; }
-    public List<Tile> getFlowers() { return flowers; }
+    public List<List<Tile>> getSheungs() {
+        return sheungs;
+    }
+
+    public List<List<Tile>> getPongs() {
+        return pongs;
+    }
+
+    public List<List<Tile>> getBrightKongs() {
+        return brightKongs;
+    }
+
+    public List<List<Tile>> getDarkKongs() {
+        return darkKongs;
+    }
+
+    public int getDarkKongCount() {
+        return darkKongCount;
+    }
+
+    public List<Tile> getFlowers() {
+        return flowers;
+    }
 }

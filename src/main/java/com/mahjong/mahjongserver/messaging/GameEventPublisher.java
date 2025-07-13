@@ -1,6 +1,5 @@
 package com.mahjong.mahjongserver.messaging;
 
-import com.mahjong.mahjongserver.dto.NetEarningsDTO;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
@@ -48,7 +47,7 @@ public class GameEventPublisher {
 
     }
 
-    public void sendRoomSummary(String roomId, NetEarningsDTO summary) {
+    public void sendRoomSummary(String roomId) {
 
     }
 }
