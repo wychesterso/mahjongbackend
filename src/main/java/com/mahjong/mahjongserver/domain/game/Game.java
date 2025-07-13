@@ -1,6 +1,5 @@
 package com.mahjong.mahjongserver.domain.game;
 
-import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
 import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.Table;
@@ -8,13 +7,10 @@ import com.mahjong.mahjongserver.domain.room.board.Board;
 import com.mahjong.mahjongserver.domain.room.board.Hand;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.room.board.tile.TileClassification;
-import com.mahjong.mahjongserver.dto.table.TableDTO;
-import com.mahjong.mahjongserver.dto.mapper.DTOMapper;
 
 public class Game {
-    private Table table = new Table();
+    private final Table table = new Table();
     private Seat currentSeat;
-    private Turn currentTurn;
 
     private final Room room;
 
@@ -32,9 +28,29 @@ public class Game {
 
     public void runGame() {
         dealStartingHands();
+        boolean drawTileOnTurnStart = false;
 
         while (!isGameOver()) {
+            Hand currentHand = table.getHand(currentSeat);
 
+            if (drawTileOnTurnStart) {
+                drawTile(currentHand);
+
+                // check for win / dark kong / bright kong
+                // if found, prompt decision and break/continue loop or pass accordingly
+
+                // prompt a discard
+
+            } else {
+                // prompt a discard
+            }
+
+            // check other players' hands for win / pong / sheung
+            // if found, prompt decision and break/continue loop or pass accordingly
+
+            // if no one picks up discarded tile, move to next player
+            currentSeat = currentSeat.next();
+            drawTileOnTurnStart = true;
         }
 
         handleDraw();
@@ -42,25 +58,24 @@ public class Game {
 
 //============================== DRAW TILES ==============================//
 
-    private Tile drawTile(Board board, Hand hand) {
-        Tile tile = board.drawTile();
+    private Tile drawTile(Hand hand) {
+        Tile tile = getBoard().drawTile();
         while (tile.getTileType().getClassification() == TileClassification.FLOWER) {
             hand.addFlower(tile);
-            tile = board.drawBonusTile();
+            tile = getBoard().drawBonusTile();
         }
         hand.addTile(tile);
         return tile;
     }
 
     private void dealStartingHands() {
-        Board board = table.getBoard();
         for (Seat gameSeat : Seat.values()) {
             Hand hand = table.getHand(gameSeat);
-            for (int i = 0; i < 17; i++) {
-                drawTile(board, hand);
+            for (int i = 0; i < 16; i++) {
+                drawTile(hand);
             }
         }
-        drawTile(board, table.getHand(currentSeat));
+        drawTile(table.getHand(currentSeat));
     }
 
 //============================== TURNS ==============================//
@@ -80,19 +95,27 @@ public class Game {
     }
 
 
-    public void startTurn() {
-        currentTurn = new Turn(currentSeat);
 
-        Tile drawnTile = drawTile(table.getBoard(), table.getHand(currentSeat));
-        currentTurn.setDrawnTile(drawnTile);
 
-        // Prompt the player to discard
-        TableDTO tableDTO = DTOMapper.fromTable(table, currentSeat);
-        PlayerContext ctx = room.getPlayerContext(currentSeat);
-        ctx.getDecisionHandler().promptDiscardOnDraw(ctx, tableDTO, drawnTile);
+
+    public Board getBoard() {
+        return table.getBoard();
     }
 
-    public void startTurnWithoutDraw() {
-
-    }
+//
+//    public void startTurn() {
+//        currentTurn = new Turn(currentSeat);
+//
+//        Tile drawnTile = drawTile(table.getBoard(), table.getHand(currentSeat));
+//        currentTurn.setDrawnTile(drawnTile);
+//
+//        // Prompt the player to discard
+//        TableDTO tableDTO = DTOMapper.fromTable(table, currentSeat);
+//        PlayerContext ctx = room.getPlayerContext(currentSeat);
+//        ctx.getDecisionHandler().promptDiscardOnDraw(ctx, tableDTO, drawnTile);
+//    }
+//
+//    public void startTurnWithoutDraw() {
+//
+//    }
 }

@@ -1,14 +1,16 @@
 package com.mahjong.mahjongserver.dto.response;
 
-public class WinResponseDTO {
-    private String roomId;
-    private boolean decision;
+import com.mahjong.mahjongserver.domain.player.decision.Decision;
 
-    public WinResponseDTO() {
+public class DecisionResponseDTO {
+    private String roomId;
+    private Decision decision;
+
+    public DecisionResponseDTO() {
         // for Spring deserialization
     }
 
-    public WinResponseDTO(String roomId, boolean decision) {
+    public DecisionResponseDTO(String roomId, Decision decision) {
         this.roomId = roomId;
         this.decision = decision;
     }
@@ -17,7 +19,7 @@ public class WinResponseDTO {
         return roomId;
     }
 
-    public boolean getDecision() {
+    public Decision getDecision() {
         return decision;
     }
 
@@ -25,7 +27,7 @@ public class WinResponseDTO {
         this.roomId = roomId;
     }
 
-    public void setDecision(boolean decision) {
+    public void setDecision(Decision decision) {
         this.decision = decision;
     }
 }

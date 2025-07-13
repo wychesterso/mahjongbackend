@@ -20,90 +20,21 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
     }
 
     @Override
-    public void promptWinOnDiscard(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder) {
+    public void promptOperationChoice(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder,
+                                      List<Decision> availableOptions) {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
-                "prompt_win_on_discard",
+                "prompt_operation_choice",
                 Map.of(
                         "table", table,
                         "discarded_tile", discardedTile,
-                        "discarder", discarder
+                        "discarder", discarder,
+                        "available_options", availableOptions
                 )
         );
     }
 
     @Override
-    public void promptWinOnDraw(PlayerContext ctx, TableDTO table, Tile drawnTile) {
-        publisher.sendPrompt(
-                ctx.getPlayer().getId(),
-                "prompt_win_on_draw",
-                Map.of(
-                        "table", table,
-                        "drawn_tile", drawnTile
-                )
-        );
-    }
-
-    @Override
-    public void promptSheung(PlayerContext ctx, TableDTO table, Tile discardedTile) {
-        publisher.sendPrompt(
-                ctx.getPlayer().getId(),
-                "prompt_sheung",
-                Map.of(
-                        "table", table,
-                        "discarded_tile", discardedTile
-                )
-        );
-    }
-
-    @Override
-    public void promptPong(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder) {
-        publisher.sendPrompt(
-                ctx.getPlayer().getId(),
-                "prompt_pong",
-                Map.of(
-                        "table", table,
-                        "discarded_tile", discardedTile,
-                        "discarder", discarder
-                )
-        );
-    }
-
-    @Override
-    public void promptBrightKongOnDiscard(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder) {
-        publisher.sendPrompt(
-                ctx.getPlayer().getId(),
-                "prompt_bright_kong_on_discard",
-                Map.of(
-                        "table", table,
-                        "discarded_tile", discardedTile,
-                        "discarder", discarder
-                )
-        );
-    }
-
-    public void promptBrightKongOnDraw(PlayerContext ctx, TableDTO table, Tile drawnTile) {
-        publisher.sendPrompt(
-                ctx.getPlayer().getId(),
-                "prompt_bright_kong_on_draw",
-                Map.of(
-                        "table", table,
-                        "drawn_tile", drawnTile
-                )
-        );
-    }
-
-    public void promptDarkKong(PlayerContext ctx, TableDTO table, Tile drawnTile) {
-        publisher.sendPrompt(
-                ctx.getPlayer().getId(),
-                "prompt_dark_kong",
-                Map.of(
-                        "table", table,
-                        "drawn_tile", drawnTile
-                )
-        );
-    }
-
     public void promptSheungCombo(PlayerContext ctx, Tile discardedTile, List<List<Tile>> validCombos) {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
@@ -115,6 +46,7 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
         );
     }
 
+    @Override
     public void promptDiscard(PlayerContext ctx, TableDTO table) {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
@@ -125,6 +57,7 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
         );
     }
 
+    @Override
     public void promptDiscardOnDraw(PlayerContext ctx, TableDTO table, Tile drawnTile) {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
