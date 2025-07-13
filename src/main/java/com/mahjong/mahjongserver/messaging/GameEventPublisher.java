@@ -40,14 +40,4 @@ public class GameEventPublisher {
     public void sendLog(String roomId, String message) {
         sendToAll(roomId, Map.of("type", "log", "message", message));
     }
-
-
-
-    public void sendGameSummary(String roomId) {
-
-    }
-
-    public void sendRoomSummary(String roomId) {
-
-    }
 }

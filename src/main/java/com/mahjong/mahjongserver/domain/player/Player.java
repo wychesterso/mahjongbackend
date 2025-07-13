@@ -1,33 +1,29 @@
 package com.mahjong.mahjongserver.domain.player;
 
-public class Player {
-    private int id;
-    private String username;
+public abstract class Player {
+    private String id;
     private int score;
 
-    public Player(int id, String username) {
+    public Player(String id) {
         this.id = id;
-        this.username = username;
         this.score = 1000;
     }
 
 //============================== GETTERS AND SETTERS ==============================//
 
-    public int getId() {
+    public String getId() {
         return id;
-    }
-
-    public String getUsername() {
-        return username;
     }
 
     public int getScore() {
         return score;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setId(String id) {
+        this.id = id;
     }
+
+    abstract boolean isBot();
 
 //============================== UPDATE SCORE ==============================//
 

@@ -39,6 +39,16 @@ public class Hand {
         return flowers;
     }
 
+//============================== COUNTS ==============================//
+
+    public int getConcealedTileCount() {
+        return concealedTiles.size();
+    }
+
+    public int getDarkKongCount() {
+        return darkKongs.size();
+    }
+
 //============================== ADD AND REMOVE TILES ==============================//
 
     public void addTile(Tile tile) {

@@ -8,40 +8,33 @@ import java.util.Map;
 
 public class TableDTO {
     private final List<Tile> discardPile;
-    private final int remainingTileCount;
-    private final Map<Seat, RevealedHandDTO> revealedHands;
-    private final Map<Seat, Integer> concealedTileCounts;
-    private final Seat currentTurn;
+    private final int drawPileSize;
+    private final Seat selfSeat;
+    private final Map<Seat, HandDTO> hands;
 
     public TableDTO(List<Tile> discardPile,
-                    int remainingTileCount,
-                    Map<Seat, RevealedHandDTO> revealedHands,
-                    Map<Seat, Integer> concealedTileCounts,
-                    Seat currentTurn) {
+                    int drawPileSize,
+                    Seat selfSeat,
+                    Map<Seat, HandDTO> hands) {
         this.discardPile = discardPile;
-        this.remainingTileCount = remainingTileCount;
-        this.revealedHands = revealedHands;
-        this.concealedTileCounts = concealedTileCounts;
-        this.currentTurn = currentTurn;
+        this.drawPileSize = drawPileSize;
+        this.selfSeat = selfSeat;
+        this.hands = hands;
     }
 
     public List<Tile> getDiscardPile() {
         return discardPile;
     }
 
-    public int getRemainingTileCount() {
-        return remainingTileCount;
+    public int getDrawPileSize() {
+        return drawPileSize;
     }
 
-    public Map<Seat, RevealedHandDTO> getRevealedHands() {
-        return revealedHands;
+    public Seat getSelfSeat() {
+        return selfSeat;
     }
 
-    public Map<Seat, Integer> getConcealedTileCounts() {
-        return concealedTileCounts;
-    }
-
-    public Seat getCurrentTurn() {
-        return currentTurn;
+    public Map<Seat, HandDTO> getHands() {
+        return hands;
     }
 }
