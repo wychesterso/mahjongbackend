@@ -55,8 +55,12 @@ public class Board {
 
 //============================== DRAW AND DISCARD TILES ==============================//
 
-    public Tile takeFromDrawPile() {
+    public Tile drawTile() {
         return drawPile.getFirst();
+    }
+
+    public Tile drawBonusTile() {
+        return drawPile.getLast();
     }
 
     public void putInDiscardPile(Tile tile) {

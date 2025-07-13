@@ -2,13 +2,15 @@ package com.mahjong.mahjongserver.domain.room;
 
 import com.mahjong.mahjongserver.domain.game.Game;
 import com.mahjong.mahjongserver.domain.player.Player;
-import com.mahjong.mahjongserver.messaging.GameEventPublisher;
+import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
+import com.mahjong.mahjongserver.domain.player.decision.PlayerDecisionHandler;
+import com.mahjong.mahjongserver.domain.core.GameEventPublisher;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class Room {
-    private Map<Seat, Player> seatMapping = new HashMap<>();
+    private Map<Seat, PlayerContext> playerContexts = new HashMap<>();
     private Game currentGame = null;
     private Seat currentSeat = Seat.EAST;
 
@@ -20,7 +22,7 @@ public class Room {
         this.roomId = roomId;
 
         for (Seat seat : Seat.values()) {
-            seatMapping.put(seat, null);
+            playerContexts.put(seat, null);
         }
     }
 
@@ -32,22 +34,22 @@ public class Room {
 
 //============================== SEATING ==============================//
 
-    public Player getPlayerAtSeat(Seat seat) {
-        return seatMapping.get(seat);
+    public PlayerContext getPlayerContext(Seat seat) {
+        return playerContexts.get(seat);
     }
 
     public Seat getSeat(Player player) {
         for (Seat seat : Seat.values()) {
-            if (getPlayerAtSeat(seat) == player) {
+            if (getPlayerContext(seat).getPlayer() == player) {
                 return seat;
             }
         }
         return null;
     }
 
-    public boolean addPlayer(Seat seat, Player player) {
-        if (seatMapping.get(seat) == null) {
-            seatMapping.put(seat, player);
+    public boolean addPlayer(Seat seat, Player player, PlayerDecisionHandler decisionHandler) {
+        if (playerContexts.get(seat) == null) {
+            playerContexts.put(seat, new PlayerContext(player, decisionHandler));
             return true;
         } else {
             return false;
@@ -55,16 +57,16 @@ public class Room {
     }
 
     public void removePlayer(Seat seat) {
-        seatMapping.put(seat, null);
+        playerContexts.put(seat, null);
     }
 
 //============================== GAME ==============================//
 
     public boolean startGame() {
         for (Seat seat : Seat.values()) {
-            if (seatMapping.get(seat) == null) return false;
+            if (playerContexts.get(seat) == null) return false;
         }
-        currentGame = new Game(gameEventPublisher, roomId, currentSeat);
+        currentGame = new Game(this, currentSeat);
         currentSeat = currentSeat.next();
         return true;
     }

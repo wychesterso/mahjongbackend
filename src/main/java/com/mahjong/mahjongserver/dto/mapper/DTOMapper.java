@@ -4,8 +4,8 @@ import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.Table;
 import com.mahjong.mahjongserver.domain.room.board.Hand;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
-import com.mahjong.mahjongserver.dto.HandDTO;
-import com.mahjong.mahjongserver.dto.TableDTO;
+import com.mahjong.mahjongserver.dto.table.HandDTO;
+import com.mahjong.mahjongserver.dto.table.TableDTO;
 
 import java.util.EnumMap;
 import java.util.List;

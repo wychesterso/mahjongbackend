@@ -1,36 +1,58 @@
 package com.mahjong.mahjongserver.domain.game;
 
+import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
+import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.Table;
 import com.mahjong.mahjongserver.domain.room.board.Board;
 import com.mahjong.mahjongserver.domain.room.board.Hand;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.room.board.tile.TileClassification;
-import com.mahjong.mahjongserver.messaging.GameEventPublisher;
+import com.mahjong.mahjongserver.dto.table.TableDTO;
+import com.mahjong.mahjongserver.dto.mapper.DTOMapper;
 
 public class Game {
     private Table table = new Table();
     private Seat currentSeat;
+    private Turn currentTurn;
 
-    private GameEventPublisher gameEventPublisher;
-    private String roomId;
+    private final Room room;
 
-    public Game(GameEventPublisher gameEventPublisher, String roomId) {
-        this.gameEventPublisher = gameEventPublisher;
-        this.roomId = roomId;
-        startGame(Seat.EAST);
+    public Game(Room room) {
+        this.room = room;
+        currentSeat = Seat.EAST;
     }
 
-    public Game(GameEventPublisher gameEventPublisher, String roomId, Seat seat) {
-        this.gameEventPublisher = gameEventPublisher;
-        this.roomId = roomId;
-        startGame(seat);
-    }
-
-    private void startGame(Seat seat) {
+    public Game(Room room, Seat seat) {
+        this.room = room;
         currentSeat = seat;
+    }
 
-        // populate hands
+//============================== ACCESS POINT - FLOW OF ONE MAHJONG GAME ==============================//
+
+    public void runGame() {
+        dealStartingHands();
+
+        while (!isGameOver()) {
+
+        }
+
+        handleDraw();
+    }
+
+//============================== DRAW TILES ==============================//
+
+    private Tile drawTile(Board board, Hand hand) {
+        Tile tile = board.drawTile();
+        while (tile.getTileType().getClassification() == TileClassification.FLOWER) {
+            hand.addFlower(tile);
+            tile = board.drawBonusTile();
+        }
+        hand.addTile(tile);
+        return tile;
+    }
+
+    private void dealStartingHands() {
         Board board = table.getBoard();
         for (Seat gameSeat : Seat.values()) {
             Hand hand = table.getHand(gameSeat);
@@ -38,21 +60,36 @@ public class Game {
                 drawTile(board, hand);
             }
         }
-        drawTile(board, table.getHand(seat));
+        drawTile(board, table.getHand(currentSeat));
     }
 
-    private void drawTile(Board board, Hand hand) {
-        Tile tile = board.takeFromDrawPile();
-        while (tile.getTileType().getClassification() == TileClassification.FLOWER) {
-            hand.addFlower(tile);
-            tile = board.takeFromDrawPile();
-        }
-        hand.addTile(tile);
+//============================== TURNS ==============================//
+
+//============================== GAME OVER ==============================//
+
+    private boolean isGameOver() {
+        return false;
     }
+
+    private void handleWin() {
+
+    }
+
+    private void handleDraw() {
+
+    }
+
 
     public void startTurn() {
-        Hand hand = table.getHand(currentSeat);
+        currentTurn = new Turn(currentSeat);
 
+        Tile drawnTile = drawTile(table.getBoard(), table.getHand(currentSeat));
+        currentTurn.setDrawnTile(drawnTile);
+
+        // Prompt the player to discard
+        TableDTO tableDTO = DTOMapper.fromTable(table, currentSeat);
+        PlayerContext ctx = room.getPlayerContext(currentSeat);
+        ctx.getDecisionHandler().promptDiscardOnDraw(ctx, tableDTO, drawnTile);
     }
 
     public void startTurnWithoutDraw() {

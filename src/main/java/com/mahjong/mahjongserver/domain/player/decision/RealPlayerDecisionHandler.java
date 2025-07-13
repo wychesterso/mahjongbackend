@@ -3,8 +3,8 @@ package com.mahjong.mahjongserver.domain.player.decision;
 import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
-import com.mahjong.mahjongserver.dto.TableDTO;
-import com.mahjong.mahjongserver.messaging.GameEventPublisher;
+import com.mahjong.mahjongserver.dto.table.TableDTO;
+import com.mahjong.mahjongserver.domain.core.GameEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
