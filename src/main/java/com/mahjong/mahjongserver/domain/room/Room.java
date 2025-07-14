@@ -5,6 +5,7 @@ import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
 import com.mahjong.mahjongserver.domain.player.decision.PlayerDecisionHandler;
 import com.mahjong.mahjongserver.domain.core.GameEventPublisher;
+import com.mahjong.mahjongserver.infrastructure.TimeoutScheduler;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +17,8 @@ public class Room {
 
     private GameEventPublisher gameEventPublisher;
     private String roomId;
+
+    private TimeoutScheduler timeoutScheduler;
 
     public Room(GameEventPublisher gameEventPublisher, String roomId) {
         this.gameEventPublisher = gameEventPublisher;
@@ -42,6 +45,10 @@ public class Room {
 
     public String getRoomId() {
         return roomId;
+    }
+
+    public TimeoutScheduler getTimeoutScheduler() {
+        return timeoutScheduler;
     }
 
     //============================== SEATING ==============================//

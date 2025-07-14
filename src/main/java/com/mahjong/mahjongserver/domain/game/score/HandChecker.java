@@ -7,7 +7,7 @@ import com.mahjong.mahjongserver.domain.room.board.tile.TileType;
 
 import java.util.*;
 
-public class WinChecker {
+public class HandChecker {
 
 //============================== ENTRY POINTS ==============================//
 
@@ -27,16 +27,94 @@ public class WinChecker {
     /**
      * Checks if there is a valid win condition when a tile is taken from an opponent discard.
      * @param hand the player's current hand.
-     * @param tile the tile most recently discarded.
+     * @param discardedTile the tile most recently discarded.
      * @return true iff the win condition is satisfied, false otherwise.
      */
-    public static boolean checkWin(Hand hand, Tile tile) {
+    public static boolean checkWin(Hand hand, Tile discardedTile) {
         List<Tile> tiles = new ArrayList<>(hand.getConcealedTiles());
-        tiles.add(tile);
+        tiles.add(discardedTile);
         Collections.sort(tiles);
 
         return checkSixteenDisjoint(tiles) || checkThirteenOrphans(tiles)
                 || checkLikKuLikKu(tiles) != null || canFormGroups(tiles);
+    }
+
+    public static boolean checkDarkKong(Hand hand) {
+        Map<Tile, Integer> tileCount = new HashMap<>();
+        for (Tile tile : hand.getConcealedTiles()) {
+            int newCount = tileCount.getOrDefault(tile, 0) + 1;
+            if (newCount == 4) return true;
+            tileCount.put(tile, newCount);
+        }
+        return false;
+    }
+
+    public static boolean checkBrightKong(Hand hand) {
+        for (List<Tile> pong : hand.getPongs()) {
+            Tile tile = pong.getFirst();
+            if (hand.getConcealedTiles().contains(tile)) return true;
+        }
+        return false;
+    }
+
+    public static boolean checkBrightKong(Hand hand, Tile discardedTile) {
+        int count = 0;
+        for (Tile tile : hand.getConcealedTiles()) {
+            if (tile == discardedTile) {
+                if (++count == 3) return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean checkPong(Hand hand, Tile discardedTile) {
+        int count = 0;
+        for (Tile tile : hand.getConcealedTiles()) {
+            if (tile == discardedTile) {
+                if (++count == 2) return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean checkSheung(Hand hand, Tile discardedTile) {
+        if (discardedTile.getTileType().getClassification() != TileClassification.REGULAR) return false;
+
+        List<Tile> concealedTiles = hand.getConcealedTiles();
+
+        for (int i = 0; i < concealedTiles.size() - 1; i++) {
+            Tile tile1 = concealedTiles.get(i);
+            if (tile1.getTileType() != discardedTile.getTileType()) continue;
+
+            for (int j = i + 1; j < concealedTiles.size(); j++) {
+                Tile tile2 = concealedTiles.get(j);
+                List<Tile> group = List.of(discardedTile, tile1, tile2);
+                if (isValidSheung(group)) return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static List<List<Tile>> getSheungCombos(Hand hand, Tile discardedTile) {
+        List<Tile> concealedTiles = hand.getConcealedTiles();
+        List<List<Tile>> result = new ArrayList<>();
+
+        for (int i = 0; i < concealedTiles.size() - 1; i++) {
+            Tile tile1 = concealedTiles.get(i);
+            if (tile1.getTileType() != discardedTile.getTileType()) continue;
+
+            for (int j = i + 1; j < concealedTiles.size(); j++) {
+                Tile tile2 = concealedTiles.get(j);
+                List<Tile> group = List.of(discardedTile, tile1, tile2);
+
+                if (isValidSheung(group)) {
+                    result.add(List.of(concealedTiles.get(i), concealedTiles.get(j)));
+                }
+            }
+        }
+
+        return result;
     }
 
 //============================== GENERAL ==============================//
