@@ -8,8 +8,8 @@ import com.mahjong.mahjongserver.dto.table.TableDTO;
 import java.util.List;
 
 public interface PlayerDecisionHandler {
-    void promptOperationChoice(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder,
-                               List<Decision> availableOptions);
+    void promptDecision(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder,
+                        List<Decision> availableOptions);
     void promptSheungCombo(PlayerContext ctx, Tile discardedTile, List<List<Tile>> validCombos);
     void promptDiscard(PlayerContext ctx, TableDTO table);
     void promptDiscardOnDraw(PlayerContext ctx, TableDTO table, Tile drawnTile);

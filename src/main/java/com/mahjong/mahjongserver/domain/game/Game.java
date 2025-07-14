@@ -1,5 +1,7 @@
 package com.mahjong.mahjongserver.domain.game;
 
+import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
+import com.mahjong.mahjongserver.domain.player.decision.Decision;
 import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.Table;
@@ -7,6 +9,10 @@ import com.mahjong.mahjongserver.domain.room.board.Board;
 import com.mahjong.mahjongserver.domain.room.board.Hand;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.room.board.tile.TileClassification;
+import com.mahjong.mahjongserver.dto.mapper.DTOMapper;
+import com.mahjong.mahjongserver.dto.table.TableDTO;
+
+import java.util.List;
 
 public class Game {
     private final Table table = new Table();
@@ -24,25 +30,43 @@ public class Game {
         currentSeat = seat;
     }
 
+//============================== GETTERS ==============================//
+
+    public Table getTable() {
+        return table;
+    }
+
+    public Board getBoard() {
+        return table.getBoard();
+    }
+
+    public Seat getCurrentSeat() {
+        return currentSeat;
+    }
+
 //============================== ACCESS POINT - FLOW OF ONE MAHJONG GAME ==============================//
 
     public void runGame() {
         dealStartingHands();
         boolean drawTileOnTurnStart = false;
 
+        // check for win / dark kong
+
         while (!isGameOver()) {
             Hand currentHand = table.getHand(currentSeat);
 
             if (drawTileOnTurnStart) {
-                drawTile(currentHand);
+                Tile drawnTile = drawTile(currentHand);
 
                 // check for win / dark kong / bright kong
                 // if found, prompt decision and break/continue loop or pass accordingly
 
                 // prompt a discard
+                promptDiscardOnDraw(drawnTile);
 
             } else {
                 // prompt a discard
+                promptDiscard();
             }
 
             // check other players' hands for win / pong / sheung
@@ -65,6 +89,7 @@ public class Game {
             tile = getBoard().drawBonusTile();
         }
         hand.addTile(tile);
+        updateTableState();
         return tile;
     }
 
@@ -77,8 +102,6 @@ public class Game {
         }
         drawTile(table.getHand(currentSeat));
     }
-
-//============================== TURNS ==============================//
 
 //============================== GAME OVER ==============================//
 
@@ -94,28 +117,50 @@ public class Game {
 
     }
 
+//============================== PROMPT FRONTEND ==============================//
 
-
-
-
-    public Board getBoard() {
-        return table.getBoard();
+    private void promptDecision(Tile discardedTile, Seat discarder, List<Decision> availableOptions) {
+        PlayerContext ctx = getPlayerContext();
+        ctx.getDecisionHandler().promptDecision(ctx, fromTable(), discardedTile, discarder, availableOptions);
     }
 
-//
-//    public void startTurn() {
-//        currentTurn = new Turn(currentSeat);
-//
-//        Tile drawnTile = drawTile(table.getBoard(), table.getHand(currentSeat));
-//        currentTurn.setDrawnTile(drawnTile);
-//
-//        // Prompt the player to discard
-//        TableDTO tableDTO = DTOMapper.fromTable(table, currentSeat);
-//        PlayerContext ctx = room.getPlayerContext(currentSeat);
-//        ctx.getDecisionHandler().promptDiscardOnDraw(ctx, tableDTO, drawnTile);
-//    }
-//
-//    public void startTurnWithoutDraw() {
-//
-//    }
+    private void promptSheungCombo(Tile discardedTile, List<List<Tile>> validCombos) {
+        PlayerContext ctx = getPlayerContext();
+        ctx.getDecisionHandler().promptSheungCombo(ctx, discardedTile, validCombos);
+    }
+
+    private void promptDiscard() {
+        PlayerContext ctx = getPlayerContext();
+        ctx.getDecisionHandler().promptDiscard(ctx, fromTable());
+    }
+
+    private void promptDiscardOnDraw(Tile drawnTile) {
+        PlayerContext ctx = getPlayerContext();
+        ctx.getDecisionHandler().promptDiscardOnDraw(ctx, fromTable(), drawnTile);
+    }
+
+//============================== UPDATE FRONTEND ==============================//
+
+    /**
+     * Sends a personalized update of the current game table state to all players.
+     */
+    private void updateTableState() {
+        for (Seat seat : Seat.values()) {
+            PlayerContext ctx = room.getPlayerContext(seat);
+            room.getGameEventPublisher().sendTableUpdate(
+                    ctx.getPlayer().getId(),
+                    DTOMapper.fromTable(table, seat)
+            );
+        }
+    }
+
+//============================== HELPERS ==============================//
+
+    private PlayerContext getPlayerContext() {
+        return room.getPlayerContext(currentSeat);
+    }
+
+    private TableDTO fromTable() {
+        return DTOMapper.fromTable(table, currentSeat);
+    }
 }

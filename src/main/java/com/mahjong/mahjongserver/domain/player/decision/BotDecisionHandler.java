@@ -10,8 +10,8 @@ import java.util.List;
 public class BotDecisionHandler implements PlayerDecisionHandler {
 
     @Override
-    public void promptOperationChoice(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder,
-                                      List<Decision> availableOptions) {
+    public void promptDecision(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder,
+                               List<Decision> availableOptions) {
 
     }
 

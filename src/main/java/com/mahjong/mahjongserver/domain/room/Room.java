@@ -32,7 +32,19 @@ public class Room {
         return currentGame;
     }
 
-//============================== SEATING ==============================//
+    public Seat getCurrentSeat() {
+        return currentSeat;
+    }
+
+    public GameEventPublisher getGameEventPublisher() {
+        return gameEventPublisher;
+    }
+
+    public String getRoomId() {
+        return roomId;
+    }
+
+    //============================== SEATING ==============================//
 
     public PlayerContext getPlayerContext(Seat seat) {
         return playerContexts.get(seat);

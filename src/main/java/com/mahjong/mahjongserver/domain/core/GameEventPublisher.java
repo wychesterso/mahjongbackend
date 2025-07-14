@@ -29,15 +29,33 @@ public class GameEventPublisher {
      * @param data the prompt data.
      */
     public void sendPrompt(String playerId, String type, Object data) {
-        sendToPlayer(playerId, Map.of("type", type, "data", data));
+        sendToPlayer(playerId, Map.of(
+                "type", type,
+                "data", data
+        ));
     }
 
     /**
      * Send a broadcast message to all players.
-     * @param roomId the id of the current room.
+     * @param roomId the id of the room.
      * @param message the message to broadcast.
      */
     public void sendLog(String roomId, String message) {
-        sendToAll(roomId, Map.of("type", "log", "message", message));
+        sendToAll(roomId, Map.of(
+                "type", "log",
+                "message", message
+        ));
+    }
+
+    /**
+     * Send the current game state to a specified player.
+     * @param playerId the id of the specified player.
+     * @param tableDTO the latest representation of the game table.
+     */
+    public void sendTableUpdate(String playerId, Object tableDTO) {
+        sendToPlayer(playerId, Map.of(
+                "type", "update",
+                "data", tableDTO
+        ));
     }
 }
