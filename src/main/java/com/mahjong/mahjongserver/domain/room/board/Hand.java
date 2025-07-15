@@ -3,6 +3,7 @@ package com.mahjong.mahjongserver.domain.room.board;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class Hand {
@@ -17,6 +18,10 @@ public class Hand {
 
     public List<Tile> getConcealedTiles() {
         return concealedTiles;
+    }
+
+    public Tile getLastDrawnTile() {
+        return concealedTiles.getLast();
     }
 
     public List<List<Tile>> getSheungs() {
@@ -65,47 +70,56 @@ public class Hand {
 
 //============================== PERFORM HAND OPERATIONS ==============================//
 
-    public boolean performSheung(List<Tile> tiles) {
-        if (concealedTiles.remove(tiles.get(0))) {
-            if (concealedTiles.remove(tiles.get(1))) {
-                if (concealedTiles.remove(tiles.get(2))) {
-                    return sheungs.add(tiles);
-                }
-                concealedTiles.add(tiles.get(1));
+    public boolean performSheung(Tile discardedTile, List<Tile> sheungCombo) {
+        if (!sheungCombo.contains(discardedTile)) return false;
+
+        List<Tile> toRemove = new ArrayList<>(sheungCombo);
+        toRemove.remove(discardedTile); // don't remove the discarded tile
+
+        if (!concealedTiles.containsAll(toRemove)) return false;
+
+        // safe to remove
+        concealedTiles.removeAll(toRemove);
+        return sheungs.add(new ArrayList<>(sheungCombo));
+    }
+
+    public boolean performPong(Tile discardedTile) {
+        if (!removeFromConcealedHand(discardedTile, 2)) return false;
+        return pongs.add(List.of(discardedTile, discardedTile, discardedTile));
+    }
+
+    public boolean performBrightKongFromDiscard(Tile discardedTile) {
+        if (!removeFromConcealedHand(discardedTile, 3)) return false;
+        return brightKongs.add(List.of(discardedTile, discardedTile, discardedTile, discardedTile));
+    }
+
+    public boolean performBrightKongFromDraw(Tile targetTile) {
+        Iterator<List<Tile>> iterator = pongs.iterator();
+        while (iterator.hasNext()) {
+            List<Tile> pong = iterator.next();
+            if (pong.getFirst() == targetTile) {
+                if (!concealedTiles.remove(targetTile)) return false;
+                iterator.remove();
+                return brightKongs.add(List.of(targetTile, targetTile, targetTile, targetTile));
             }
-            concealedTiles.add(tiles.get(0));
         }
         return false;
     }
 
-    public boolean performBrightPong(Tile tile) {
-        for (int i = 0; i < 2; i++) {
-            if (!concealedTiles.remove(tile)) return false;
-        }
-        return pongs.add(List.of(tile, tile, tile));
+    public boolean performDarkKong(Tile targetTile) {
+        if (!removeFromConcealedHand(targetTile, 4)) return false;
+        return darkKongs.add(List.of(targetTile, targetTile, targetTile, targetTile));
     }
 
-    public boolean performDarkPong(Tile tile) {
-        for (int i = 0; i < 3; i++) {
-            if (!concealedTiles.remove(tile)) return false;
-        }
-        return pongs.add(List.of(tile, tile, tile));
-    }
+    private boolean removeFromConcealedHand(Tile targetTile, int count) {
+        long actualCount = concealedTiles.stream().filter(t -> t.equals(targetTile)).count();
+        if (actualCount < count) return false; // not enough tiles
 
-    public boolean performBrightKong(Tile tile) {
-        for (List<Tile> pong : pongs) {
-            if (pong.getFirst() == tile) {
-                pongs.remove(pong);
-                return brightKongs.add(List.of(tile, tile, tile, tile));
-            }
+        // remove 2 matching tiles
+        for (int i = 0; i < count; i++) {
+            concealedTiles.remove(targetTile);
         }
-        return false;
-    }
 
-    public boolean performDarkKong(Tile tile) {
-        for (int i = 0; i < 4; i++) {
-            if (!concealedTiles.remove(tile)) return false;
-        }
-        return darkKongs.add(List.of(tile, tile, tile, tile));
+        return true;
     }
 }

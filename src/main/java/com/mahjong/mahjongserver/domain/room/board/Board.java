@@ -55,11 +55,17 @@ public class Board {
 
 //============================== DRAW AND DISCARD TILES ==============================//
 
+    public boolean canDraw() {
+        return drawPile.size() > minTilesLeft;
+    }
+
     public Tile drawTile() {
+        if (!canDraw()) return null;
         return drawPile.getFirst();
     }
 
     public Tile drawBonusTile() {
+        if (!canDraw()) return null;
         return drawPile.getLast();
     }
 

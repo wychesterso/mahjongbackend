@@ -24,7 +24,7 @@ public class GameController {
     @MessageMapping("/game/respondDiscard")
     public void handleDiscardResponse(DiscardResponseDTO response, Principal principal) {
         String playerId = principal.getName();
-        gameService.processDiscardResponse(response, playerId);
+        // gameService.processDiscardResponse(response, playerId);
     }
 
     // /game/respondDecision

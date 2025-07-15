@@ -82,11 +82,17 @@ public class Room {
 //============================== GAME ==============================//
 
     public boolean startGame() {
+        // check that room is full
         for (Seat seat : Seat.values()) {
             if (playerContexts.get(seat) == null) return false;
         }
+
         currentGame = new Game(this, currentSeat);
+        currentGame.startGame();
+
+        // switch Zhong player to next seat (unless pull occured)
         currentSeat = currentSeat.next();
+
         return true;
     }
 }
