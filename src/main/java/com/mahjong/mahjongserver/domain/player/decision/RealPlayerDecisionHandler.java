@@ -21,7 +21,7 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
 
     @Override
     public void promptDecision(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder,
-                               List<Decision> availableOptions) {
+                               List<Decision> availableOptions, List<List<Tile>> sheungCombos) {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
                 "prompt_operation_choice",
@@ -29,7 +29,8 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
                         "table", table,
                         "discarded_tile", discardedTile,
                         "discarder", discarder,
-                        "available_options", availableOptions
+                        "available_options", availableOptions,
+                        "sheung_combos", sheungCombos
                 )
         );
     }

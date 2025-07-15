@@ -25,7 +25,7 @@ public class Game {
     private Seat currentSeat;
 
     // game statistics
-    private Seat winnerSeat = null;
+    private final List<Seat> winnerSeats = new ArrayList<>();
     private int numDraws = 0;
 
     // prompting and frontend player-interaction stuff
@@ -58,6 +58,10 @@ public class Game {
         return currentSeat;
     }
 
+    public List<Seat> getWinnerSeats() {
+        return winnerSeats;
+    }
+
 //============================== EVENTS ==============================//
 
     public void startGame() {
@@ -68,15 +72,21 @@ public class Game {
 
     public void startTurnWithoutDraw() {
         resetClaims();
+        updateTableState();
         promptDiscard();
     }
 
     public void startTurnWithDraw() {
         resetClaims();
+        updateTableState();
 
         // draw tile
         Hand hand = table.getHand(currentSeat);
         Tile drawnTile = drawTile(hand);
+        if (drawnTile == null) {
+            endGameByDraw();
+            return;
+        }
 
         // check claim options
         if (handleClaimsAfterDraw(drawnTile)) return;
@@ -87,37 +97,21 @@ public class Game {
 
     public void startTurnWithBonusDraw() {
         resetClaims();
+        updateTableState();
 
         // draw tile
         Hand hand = table.getHand(currentSeat);
         Tile drawnTile = drawBonusTile(hand);
+        if (drawnTile == null) {
+            endGameByDraw();
+            return;
+        }
 
         // check claim options
         if (handleClaimsAfterDraw(drawnTile)) return;
 
         // prompt discard
         promptDiscardOnDraw(drawnTile);
-    }
-
-    private boolean handleClaimsAfterDraw(Tile drawnTile) {
-        List<ClaimOption> claimOptions = checkForClaimsOnDraw();
-        if (!claimOptions.isEmpty()) {
-            expectedClaims.put(currentSeat, claimOptions);
-
-            promptDecision(drawnTile, null, currentSeat, claimOptions.stream()
-                    .map(ClaimOption::getDecision)
-                    .distinct()
-                    .toList());
-
-            room.getTimeoutScheduler().schedule(
-                    "claim:" + getPlayerContext().getPlayer().getId(),
-                    () -> handleAutoPassDrawDecision(getPlayerContext().getPlayer()),
-                    TIMEOUT_MILLIS
-            );
-
-            return true; // claim prompt was issued
-        }
-        return false; // no claim options
     }
 
 //============================== DRAW TILES ==============================//
@@ -132,10 +126,14 @@ public class Game {
 
     private Tile drawAndHandleBonusTile(Supplier<Tile> drawFunc, Hand hand) {
         Tile tile = drawFunc.get();
+        if (tile == null) return null; // drawPile exhausted, end game
+
         while (tile.getTileType().getClassification() == TileClassification.FLOWER) {
             hand.addFlower(tile);
             tile = getBoard().drawBonusTile();
+            if (tile == null) return null;
         }
+
         hand.addTile(tile);
         updateTableState();
         return tile;
@@ -206,6 +204,27 @@ public class Game {
         return claims;
     }
 
+    private boolean handleClaimsAfterDraw(Tile drawnTile) {
+        List<ClaimOption> claimOptions = checkForClaimsOnDraw();
+        if (!claimOptions.isEmpty()) {
+            expectedClaims.put(currentSeat, claimOptions);
+
+            promptDecision(drawnTile, null, currentSeat, claimOptions.stream()
+                    .map(ClaimOption::getDecision)
+                    .distinct()
+                    .toList(), null);
+
+            room.getTimeoutScheduler().schedule(
+                    "claim:" + getPlayerContext().getPlayer().getId(),
+                    () -> handleAutoPassDrawDecision(getPlayerContext().getPlayer()),
+                    TIMEOUT_MILLIS
+            );
+
+            return true; // claim prompt was issued
+        }
+        return false; // no claim options
+    }
+
 //============================== PROMPT FRONTEND ==============================//
 
     private void promptClaimDecisions(Tile discardedTile, Seat discarder, Map<Seat, List<ClaimOption>> claimMap) {
@@ -221,7 +240,13 @@ public class Game {
                     .distinct()
                     .toList();
 
-            promptDecision(discardedTile, discarder, claimant, options);
+            List<List<Tile>> sheungCombos = claimOptions.stream()
+                    .filter(opt -> opt.getDecision() == Decision.SHEUNG)
+                    .findFirst()
+                    .map(ClaimOption::getValidCombos)
+                    .orElse(null);
+
+            promptDecision(discardedTile, discarder, claimant, options, sheungCombos);
 
             // start timeout to auto-pass if no response
             room.getTimeoutScheduler().schedule(
@@ -232,29 +257,25 @@ public class Game {
         }
     }
 
-    private void promptDecision(Tile discardedTile, Seat discarder, Seat claimee, List<Decision> availableOptions) {
+    private void promptDecision(Tile discardedTile, Seat discarder, Seat claimee,
+                                List<Decision> availableOptions, List<List<Tile>> sheungCombos) {
         PlayerContext ctx = room.getPlayerContext(claimee);
         ctx.getDecisionHandler().promptDecision(
                 ctx,
                 DTOMapper.fromTable(table, claimee),
                 discardedTile,
                 discarder,
-                availableOptions
+                availableOptions,
+                sheungCombos
         );
-    }
-
-    private void promptSheungCombo(Tile discardedTile, List<List<Tile>> validCombos) {
-        PlayerContext ctx = getPlayerContext();
-        ctx.getDecisionHandler().promptSheungCombo(ctx, discardedTile, validCombos);
     }
 
     private void promptDiscard() {
         PlayerContext ctx = getPlayerContext();
         ctx.getDecisionHandler().promptDiscard(ctx, fromTable());
 
-        room.getTimeoutScheduler().schedule("discard:" + ctx.getPlayer().getId(), () -> {
-            // handleAutoDiscard(ctx.getPlayer());
-        }, TIMEOUT_MILLIS);
+        room.getTimeoutScheduler().schedule("discard:" + ctx.getPlayer().getId(),
+                this::handleAutoDiscard, TIMEOUT_MILLIS);
     }
 
     private void promptDiscardOnDraw(Tile drawnTile) {
@@ -281,7 +302,7 @@ public class Game {
         }
     }
 
-//============================== HANDLE RESPONSE FROM DISCARD ==============================//
+//============================== HANDLE FRONTEND RESPONSE - DISCARD ==============================//
 
     public void handleClaimResponseFromDiscard(Player player, Decision decision, List<Tile> selectedSheung) {
         room.getTimeoutScheduler().cancel("claim:" + player.getId());
@@ -322,6 +343,7 @@ public class Game {
             switch (decision) {
                 case WIN -> {
                     // end round, trigger win logic
+                    updateTableState();
                 }
                 case BRIGHT_KONG -> {
                     hand.performBrightKongFromDiscard(claimedTile);
@@ -376,7 +398,11 @@ public class Game {
         startTurnWithDraw();
     }
 
-//============================== HANDLE RESPONSE FROM DRAW ==============================//
+    public void handleAutoDiscard() {
+        handleDiscard(getPlayerContext().getPlayer(), table.getHand(currentSeat).getLastDrawnTile());
+    }
+
+//============================== HANDLE FRONTEND RESPONSE - DRAW ==============================//
 
     public void handleClaimResponseFromDraw(Player player, Decision decision) {
         room.getTimeoutScheduler().cancel("discard:" + player.getId());
@@ -409,6 +435,16 @@ public class Game {
 
     public void handleAutoPassDrawDecision(Player player) {
         handleClaimResponseFromDraw(player, Decision.PASS);
+    }
+
+//============================== GAME END ==============================//
+
+    public void endGameByDraw() {
+
+    }
+
+    public void endGameByWin() {
+
     }
 
 //============================== HELPERS ==============================//

@@ -11,12 +11,7 @@ public class BotDecisionHandler implements PlayerDecisionHandler {
 
     @Override
     public void promptDecision(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder,
-                               List<Decision> availableOptions) {
-
-    }
-
-    @Override
-    public void promptSheungCombo(PlayerContext ctx, Tile discardedTile, List<List<Tile>> validCombos) {
+                               List<Decision> availableOptions, List<List<Tile>> sheungCombos) {
 
     }
 

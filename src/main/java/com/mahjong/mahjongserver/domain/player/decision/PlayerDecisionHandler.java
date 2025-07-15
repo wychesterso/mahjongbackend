@@ -9,8 +9,7 @@ import java.util.List;
 
 public interface PlayerDecisionHandler {
     void promptDecision(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder,
-                        List<Decision> availableOptions);
-    void promptSheungCombo(PlayerContext ctx, Tile discardedTile, List<List<Tile>> validCombos);
+                        List<Decision> availableOptions, List<List<Tile>> sheungCombos);
     void promptDiscard(PlayerContext ctx, TableDTO table);
     void promptDiscardOnDraw(PlayerContext ctx, TableDTO table, Tile drawnTile);
 }
