@@ -1,4 +1,4 @@
-package com.mahjong.mahjongserver.domain.game;
+package com.mahjong.mahjongserver.domain.game.claim;
 
 import com.mahjong.mahjongserver.domain.player.decision.Decision;
 import com.mahjong.mahjongserver.domain.room.Seat;
@@ -7,18 +7,12 @@ import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import java.util.List;
 
 public class ClaimOption {
-    private final Seat seat;
     private final Decision decision;
     private final List<List<Tile>> validCombos; // used for Sheungs
 
-    public ClaimOption(Seat seat, Decision decision, List<List<Tile>> validCombos) {
-        this.seat = seat;
+    public ClaimOption(Decision decision, List<List<Tile>> validCombos) {
         this.decision = decision;
         this.validCombos = validCombos;
-    }
-
-    public Seat getSeat() {
-        return seat;
     }
 
     public Decision getDecision() {

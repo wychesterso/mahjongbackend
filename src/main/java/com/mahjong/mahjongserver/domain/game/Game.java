@@ -1,5 +1,7 @@
 package com.mahjong.mahjongserver.domain.game;
 
+import com.mahjong.mahjongserver.domain.game.claim.ClaimOption;
+import com.mahjong.mahjongserver.domain.game.claim.ClaimResolution;
 import com.mahjong.mahjongserver.domain.game.score.HandChecker;
 import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
@@ -14,8 +16,7 @@ import com.mahjong.mahjongserver.domain.room.board.tile.TileClassification;
 import com.mahjong.mahjongserver.dto.mapper.DTOMapper;
 import com.mahjong.mahjongserver.dto.table.TableDTO;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Game {
     private final Table table = new Table();
@@ -23,6 +24,8 @@ public class Game {
     private int numDraws = 0;
 
     private final Room room;
+    private Map<Seat, List<ClaimOption>> expectedClaims = new HashMap<>();
+    private final Map<Seat, ClaimResolution> claimResponses = new HashMap<>();
     private static final long TIMEOUT_MILLIS = 10_000;
 
     public Game(Room room) {
@@ -122,9 +125,39 @@ public class Game {
 
 //============================== PROMPT FRONTEND ==============================//
 
-    private void promptDecision(Tile discardedTile, Seat discarder, List<Decision> availableOptions) {
-        PlayerContext ctx = getPlayerContext();
-        ctx.getDecisionHandler().promptDecision(ctx, fromTable(), discardedTile, discarder, availableOptions);
+    private void promptClaimDecisions(Tile discardedTile, Seat discarder, Map<Seat, List<ClaimOption>> claimMap) {
+        for (Map.Entry<Seat, List<ClaimOption>> entry : claimMap.entrySet()) {
+            Seat claimant = entry.getKey();
+            List<ClaimOption> claimOptions = entry.getValue();
+
+            PlayerContext ctx = room.getPlayerContext(claimant);
+            Player player = ctx.getPlayer();
+
+            List<Decision> options = claimOptions.stream()
+                    .map(ClaimOption::getDecision)
+                    .distinct()
+                    .toList();
+
+            promptDecision(discardedTile, discarder, claimant, options);
+
+            // start timeout to auto-pass if no response
+            room.getTimeoutScheduler().schedule(
+                    "claim:" + player.getId(),
+                    () -> handleAutoPassClaim(player),
+                    TIMEOUT_MILLIS
+            );
+        }
+    }
+
+    private void promptDecision(Tile discardedTile, Seat discarder, Seat claimee, List<Decision> availableOptions) {
+        PlayerContext ctx = room.getPlayerContext(claimee);
+        ctx.getDecisionHandler().promptDecision(
+                ctx,
+                DTOMapper.fromTable(table, claimee),
+                discardedTile,
+                discarder,
+                availableOptions
+        );
     }
 
     private void promptSheungCombo(Tile discardedTile, List<List<Tile>> validCombos) {
@@ -163,30 +196,58 @@ public class Game {
 
 //============================== HANDLE RESPONSES FROM FRONTEND ==============================//
 
+    public void handleClaimResponse(Player player, Decision decision, List<Tile> selectedSheung) {
+        room.getTimeoutScheduler().cancel("claim:" + player.getId());
+
+        Seat claimer = room.getSeat(player);
+
+        // save this decision
+        claimResponses.put(claimer, new ClaimResolution(decision, selectedSheung));
+
+        // wait until all expected claimants respond or timeout
+        if (claimResponses.size() == expectedClaims.size()) {
+            resolveClaims();
+        }
+    }
+
+    public void handleAutoPassClaim(Player player) {
+        handleClaimResponse(player, Decision.PASS, null);
+    }
+
+    public void resolveClaims() {
+        // apply claim logic
+
+        // reset claims
+        expectedClaims.clear();
+        claimResponses.clear();
+
+        // continue the game
+    }
+
     public void handleDiscard(Player player, Tile discardedTile) {
-        // 1. Validate it’s the correct player’s turn
+        // 1. validate it’s the correct player’s turn
         Seat playerSeat = room.getSeat(player);
         if (playerSeat != currentSeat) {
             throw new IllegalStateException("Not this player's turn");
         }
 
-        // 2. Remove tile from hand and update discard pile
+        // 2. remove tile from hand and update discard pile
         Hand hand = table.getHand(currentSeat);
         hand.discardTile(discardedTile);
         getBoard().putInDiscardPile(discardedTile);
 
         updateTableState();
 
-        // 3. Check if other players can claim this tile (win, pong, sheung)
-        List<ClaimOption> claimOptions = checkForClaimsOnDiscard(discardedTile);
+        // 3. check if other players can claim this tile (win, pong, sheung)
+        expectedClaims = checkForClaimsOnDiscard(discardedTile);
 
-        if (!claimOptions.isEmpty()) {
-            // promptClaimDecisions(discardedTile, claimOptions);
-            // Exit here — wait for responses to come in from players
+        if (expectedClaims.values().stream().anyMatch(list -> !list.isEmpty())) {
+            promptClaimDecisions(discardedTile, currentSeat, expectedClaims);
+            // exit here — wait for responses to come in from players
             return;
         }
 
-        // 4. If no one claims, proceed to next player’s turn
+        // 4. if no one claims, proceed to next player’s turn
         currentSeat = currentSeat.next();
         startTurnWithoutDraw();  // kicks off next draw/discard cycle
     }
@@ -201,36 +262,35 @@ public class Game {
         return DTOMapper.fromTable(table, currentSeat);
     }
 
-    private List<ClaimOption> checkForClaimsOnDiscard(Tile discardedTile) {
-        List<ClaimOption> claims = new ArrayList<>();
+    private Map<Seat, List<ClaimOption>> checkForClaimsOnDiscard(Tile discardedTile) {
+        Map<Seat, List<ClaimOption>> claimMap = new HashMap<>();
 
         for (Seat seat : Seat.values()) {
             if (seat == currentSeat) continue; // skip discarder
 
+            List<ClaimOption> claims = new ArrayList<>();
             Hand hand = table.getHand(seat);
 
             if (HandChecker.checkWin(hand, discardedTile)) {
-                claims.add(new ClaimOption(seat, Decision.WIN, null));
+                claims.add(new ClaimOption(Decision.WIN, null));
             }
 
             if (HandChecker.checkBrightKong(hand, discardedTile)) {
-                claims.add(new ClaimOption(seat, Decision.BRIGHT_KONG, null));
+                claims.add(new ClaimOption(Decision.BRIGHT_KONG, null));
             }
 
             if (HandChecker.checkPong(hand, discardedTile)) {
-                claims.add(new ClaimOption(seat, Decision.PONG, null));
+                claims.add(new ClaimOption(Decision.PONG, null));
             }
 
             if (HandChecker.checkSheung(hand, discardedTile)) {
-                claims.add(new ClaimOption(
-                        seat,
-                        Decision.SHEUNG,
-                        HandChecker.getSheungCombos(hand, discardedTile)
-                ));
+                claims.add(new ClaimOption(Decision.SHEUNG, HandChecker.getSheungCombos(hand, discardedTile)));
             }
+
+            claimMap.put(seat, claims);
         }
 
-        return claims;
+        return claimMap;
     }
 
     private List<ClaimOption> checkForClaimsOnDraw() {
@@ -239,15 +299,15 @@ public class Game {
         Hand hand = table.getHand(currentSeat);
 
         if (HandChecker.checkWin(hand)) {
-            claims.add(new ClaimOption(currentSeat, Decision.WIN, null));
+            claims.add(new ClaimOption(Decision.WIN, null));
         }
 
         if (HandChecker.checkDarkKong(hand)) {
-            claims.add(new ClaimOption(currentSeat, Decision.DARK_KONG, null));
+            claims.add(new ClaimOption(Decision.DARK_KONG, null));
         }
 
         if (HandChecker.checkBrightKong(hand)) {
-            claims.add(new ClaimOption(currentSeat, Decision.BRIGHT_KONG, null));
+            claims.add(new ClaimOption(Decision.BRIGHT_KONG, null));
         }
 
         return claims;
