@@ -1,6 +1,8 @@
 package com.mahjong.mahjongserver.api.controller;
 
 import com.mahjong.mahjongserver.domain.core.GameService;
+import com.mahjong.mahjongserver.dto.response.ClaimResponseDTO;
+import com.mahjong.mahjongserver.dto.response.DecisionResponseDTO;
 import com.mahjong.mahjongserver.dto.response.DiscardResponseDTO;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
@@ -24,9 +26,19 @@ public class GameController {
     @MessageMapping("/game/respondDiscard")
     public void handleDiscardResponse(DiscardResponseDTO response, Principal principal) {
         String playerId = principal.getName();
-        // gameService.processDiscardResponse(response, playerId);
+        String roomId = response.getRoomId();
+        gameService.handleDiscardResponse(roomId, playerId, response);
     }
 
-    // /game/respondDecision
-    // /game/respondSheungCombo
+    @MessageMapping("/game/respondDecision")
+    public void handleDrawDecision(DecisionResponseDTO response, Principal principal) {
+        String playerId = principal.getName();
+        gameService.handleDrawDecision(response.getRoomId(), playerId, response.getDecision());
+    }
+
+    @MessageMapping("/game/respondClaim")
+    public void handleClaimDecision(ClaimResponseDTO response, Principal principal) {
+        String playerId = principal.getName();
+        gameService.handleClaimResponse(response.getRoomId(), playerId, response.getDecision(), response.getSheungCombo());
+    }
 }

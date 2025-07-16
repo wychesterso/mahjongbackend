@@ -88,10 +88,6 @@ public class Room {
         }
 
         currentGame = new Game(this, currentSeat);
-        currentGame.startGame();
-
-        // switch Zhong player to next seat (unless pull occured)
-        currentSeat = currentSeat.next();
 
         return true;
     }
