@@ -36,18 +36,6 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
     }
 
     @Override
-    public void promptSheungCombo(PlayerContext ctx, Tile discardedTile, List<List<Tile>> validCombos) {
-        publisher.sendPrompt(
-                ctx.getPlayer().getId(),
-                "prompt_sheung_combo",
-                Map.of(
-                        "discarded_tile", discardedTile,
-                        "valid_combos", validCombos
-                )
-        );
-    }
-
-    @Override
     public void promptDiscard(PlayerContext ctx, TableDTO table) {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),

@@ -58,4 +58,18 @@ public class GameEventPublisher {
                 "data", tableDTO
         ));
     }
+
+    /**
+     * Send a round-ended message to a specific player.
+     * @param roomId the id of the room.
+     * @param result either "draw" or "win".
+     * @param data additional result info (e.g. winner seats, final table state, score).
+     */
+    public void sendRoundEnded(String roomId, String result, Object data) {
+        sendToAll(roomId, Map.of(
+                "type", "round_ended",
+                "result", result,
+                "data", data
+        ));
+    }
 }

@@ -14,7 +14,7 @@ public class PlayerService {
     }
 
     public void addPlayer(Player player) {
-        players.put(player.getUsername(), player);
+        players.put(player.getId(), player);
     }
 
     public void removePlayer(String name) {

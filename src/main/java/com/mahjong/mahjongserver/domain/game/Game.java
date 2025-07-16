@@ -323,9 +323,31 @@ public class Game {
     }
 
     public void resolveClaims() {
-        // select highest priority claim (WIN > BRIGHT_KONG > PONG > SHEUNG)
+        // 1. select all wins
+        List<Map.Entry<Seat, ClaimResolution>> wins = claimResponses.entrySet().stream()
+                .filter(entry -> entry.getValue().getDecision() == Decision.WIN)
+                .toList();
+
+        if (!wins.isEmpty()) {
+            // note that there can be up to 3 winners
+            for (Map.Entry<Seat, ClaimResolution> win : wins) {
+                Seat claimer = win.getKey();
+                Hand hand = table.getHand(claimer);
+                Tile claimedTile = getBoard().getLastDiscardedTile(); // copy the tile and add it to each winning hand
+                hand.addTile(claimedTile);
+
+                winnerSeats.add(claimer);
+            }
+            getBoard().takeFromDiscardPile(); // remove the tile from discard pile
+
+            endGameByWin();
+            return;
+        }
+
+        // 2. select highest priority non-win claim (BRIGHT_KONG > PONG > SHEUNG > PASS)
         Optional<Map.Entry<Seat, ClaimResolution>> winningClaim = claimResponses.entrySet().stream()
-                .filter(entry -> entry.getValue().getDecision() != Decision.PASS).min((a, b) -> {
+                .filter(entry -> entry.getValue().getDecision() != Decision.PASS)
+                .min((a, b) -> {
                     int prioA = decisionPriority(a.getValue().getDecision());
                     int prioB = decisionPriority(b.getValue().getDecision());
                     if (prioA != prioB) return Integer.compare(prioA, prioB); // first by priority
@@ -341,10 +363,6 @@ public class Game {
             Tile claimedTile = getBoard().takeFromDiscardPile(); // take last discarded tile
 
             switch (decision) {
-                case WIN -> {
-                    // end round, trigger win logic
-                    updateTableState();
-                }
                 case BRIGHT_KONG -> {
                     hand.performBrightKongFromDiscard(claimedTile);
                     currentSeat = claimer;
@@ -440,11 +458,37 @@ public class Game {
 //============================== GAME END ==============================//
 
     public void endGameByDraw() {
+        updateTableState();
 
+        room.getGameEventPublisher().sendRoundEnded(
+                room.getRoomId(),
+                "draw",
+                Map.of(
+                        "table", DTOMapper.fromTable(table, null),  // or use a public version if needed
+                        "winners", List.of(),
+                        "reason", "Draw pile was exhausted. Game ended in a tie!"
+                )
+        );
+
+        // TODO: Score update, transition each player to next game / exit
     }
 
     public void endGameByWin() {
+        updateTableState();
 
+        // winnerSeats.add(seat of 1 or more players that won);
+
+        room.getGameEventPublisher().sendRoundEnded(
+                room.getRoomId(),
+                "draw",
+                Map.of(
+                        "table", DTOMapper.fromTable(table, null),  // or use a public version if needed
+                        "winners", winnerSeats,
+                        "reason", "Draw pile was exhausted. Game ended in a tie!"
+                )
+        );
+
+        // TODO: Score update, transition each player to next game / exit
     }
 
 //============================== HELPERS ==============================//
