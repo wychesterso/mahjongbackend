@@ -41,6 +41,7 @@ public class GameService {
     public void handleDiscardResponse(String roomId, String playerId, DiscardResponseDTO response) {
         Room room = roomManager.getRoom(roomId);
         Player player = findPlayerInRoom(room, playerId);
+
         room.getCurrentGame().handleDiscard(player, response.getTile());
     }
 

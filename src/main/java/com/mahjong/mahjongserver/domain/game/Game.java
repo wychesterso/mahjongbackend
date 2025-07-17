@@ -391,13 +391,12 @@ public class Game {
     public void handleDiscard(Player player, Tile discardedTile) {
         // 1. validate it’s the correct player’s turn
         Seat playerSeat = room.getSeat(player);
-        if (playerSeat != currentSeat) {
-            throw new IllegalStateException("Not this player's turn");
-        }
+        if (playerSeat != currentSeat) return; // silently ignore discard request from other players
 
         // 2. remove tile from hand and update discard pile
         Hand hand = table.getHand(currentSeat);
-        hand.discardTile(discardedTile);
+        if (!hand.discardTile(discardedTile)) return; // silently ignore request to discard nonexistent tile - fallback on timeout
+        room.getTimeoutScheduler().cancel("discard:" + player.getId());
         getBoard().putInDiscardPile(discardedTile);
 
         updateTableState();
