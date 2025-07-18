@@ -3,6 +3,7 @@ package com.mahjong.mahjongserver.domain.game;
 import com.mahjong.mahjongserver.domain.game.claim.ClaimOption;
 import com.mahjong.mahjongserver.domain.game.claim.ClaimResolution;
 import com.mahjong.mahjongserver.domain.game.score.HandChecker;
+import com.mahjong.mahjongserver.domain.game.score.ScoringResult;
 import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
 import com.mahjong.mahjongserver.domain.player.decision.Decision;
@@ -24,7 +25,7 @@ public class Game {
     private final Table table = new Table();
     private Seat currentSeat;
 
-    // game statistics
+    // game statistics and scoring
     private final List<Seat> winnerSeats = new ArrayList<>();
     private int numDraws = 0;
 
@@ -305,11 +306,15 @@ public class Game {
 //============================== HANDLE FRONTEND RESPONSE - DISCARD ==============================//
 
     public void handleClaimResponseFromDiscard(Player player, Decision decision, List<Tile> selectedSheung) {
-        room.getTimeoutScheduler().cancel("claim:" + player.getId());
-
         Seat claimer = room.getSeat(player);
 
-        // save this decision
+        // silently ignore invalid responses
+        if (!expectedClaims.containsKey(claimer)
+                || !expectedClaims.get(claimer).contains(decision)) return;
+        if (decision == Decision.SHEUNG && !containsSheungCombo(expectedClaims.get(claimer), selectedSheung)) return;
+
+        // cancel timeout and save this decision
+        room.getTimeoutScheduler().cancel("claim:" + player.getId());
         claimResponses.put(claimer, new ClaimResolution(decision, selectedSheung));
 
         // wait until all expected claimants respond or timeout
@@ -488,6 +493,9 @@ public class Game {
         );
 
         // TODO: Score update, transition each player to next game / exit
+        for (Seat seat : winnerSeats) {
+            ScoringResult scoringResult = room.getScoreCalculator().calculateScore(this, seat);
+        }
     }
 
 //============================== HELPERS ==============================//
@@ -519,5 +527,23 @@ public class Game {
     private void resetClaims() {
         expectedClaims.clear();
         claimResponses.clear();
+    }
+
+    private boolean containsSheungCombo(List<ClaimOption> options, List<Tile> target) {
+        for (ClaimOption option : options) {
+            for (List<Tile> combo : option.getValidCombos()) {
+                if (combo != null && isEqualCombo(combo, target)) return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isEqualCombo(List<Tile> a, List<Tile> b) {
+        if (a.size() != b.size()) return false;
+        List<Tile> copyA = new ArrayList<>(a);
+        List<Tile> copyB = new ArrayList<>(b);
+        Collections.sort(copyA);
+        Collections.sort(copyB);
+        return copyA.equals(copyB);
     }
 }

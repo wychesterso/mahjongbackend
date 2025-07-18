@@ -160,7 +160,7 @@ public class HandChecker {
      * @param tiles the tiles to check.
      * @return true iff the tiles form a valid group, false otherwise.
      */
-    private static boolean isValidGroup(List<Tile> tiles) {
+    public static boolean isValidGroup(List<Tile> tiles) {
         return isValidPong(tiles) || isValidSheung(tiles);
     }
 
@@ -169,7 +169,7 @@ public class HandChecker {
      * @param tiles the tiles to check.
      * @return true iff the tiles form a valid Sheung, false otherwise.
      */
-    private static boolean isValidSheung(List<Tile> tiles) {
+    public static boolean isValidSheung(List<Tile> tiles) {
         if (tiles.size() != 3) return false;
 
         Tile t1 = tiles.get(0);
@@ -198,7 +198,7 @@ public class HandChecker {
      * @param tiles the tiles to check.
      * @return true iff the tiles form a valid Pong, false otherwise.
      */
-    private static boolean isValidPong(List<Tile> tiles) {
+    public static boolean isValidPong(List<Tile> tiles) {
         if (tiles.size() != 3) return false;
 
         Tile t1 = tiles.get(0);

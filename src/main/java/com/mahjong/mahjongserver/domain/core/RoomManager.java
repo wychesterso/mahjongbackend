@@ -1,6 +1,7 @@
 package com.mahjong.mahjongserver.domain.core;
 
 import com.mahjong.mahjongserver.domain.core.GameEventPublisher;
+import com.mahjong.mahjongserver.domain.game.score.ScoreCalculator;
 import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.decision.PlayerDecisionHandler;
 import com.mahjong.mahjongserver.domain.room.Room;
@@ -28,11 +29,11 @@ public class RoomManager {
      * @param roomId the unique identifier for the room.
      * @return the created Room instance.
      */
-    public Room createRoom(String roomId) {
+    public Room createRoom(String roomId, ScoreCalculator scoreCalculator) {
         if (rooms.containsKey(roomId)) {
             throw new IllegalArgumentException("Room already exists: " + roomId);
         }
-        Room room = new Room(eventPublisher, roomId);
+        Room room = new Room(eventPublisher, roomId, scoreCalculator);
         rooms.put(roomId, room);
         return room;
     }

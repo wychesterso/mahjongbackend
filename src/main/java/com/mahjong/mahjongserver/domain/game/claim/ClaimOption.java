@@ -1,7 +1,6 @@
 package com.mahjong.mahjongserver.domain.game.claim;
 
 import com.mahjong.mahjongserver.domain.player.decision.Decision;
-import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 
 import java.util.List;

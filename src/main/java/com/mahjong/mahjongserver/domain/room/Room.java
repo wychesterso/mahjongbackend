@@ -1,6 +1,7 @@
 package com.mahjong.mahjongserver.domain.room;
 
 import com.mahjong.mahjongserver.domain.game.Game;
+import com.mahjong.mahjongserver.domain.game.score.ScoreCalculator;
 import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
 import com.mahjong.mahjongserver.domain.player.decision.PlayerDecisionHandler;
@@ -14,15 +15,17 @@ public class Room {
     private Map<Seat, PlayerContext> playerContexts = new HashMap<>();
     private Game currentGame = null;
     private Seat currentSeat = Seat.EAST;
+    private ScoreCalculator scoreCalculator;
 
     private GameEventPublisher gameEventPublisher;
     private String roomId;
 
     private TimeoutScheduler timeoutScheduler;
 
-    public Room(GameEventPublisher gameEventPublisher, String roomId) {
+    public Room(GameEventPublisher gameEventPublisher, String roomId, ScoreCalculator scoreCalculator) {
         this.gameEventPublisher = gameEventPublisher;
         this.roomId = roomId;
+        this.scoreCalculator = scoreCalculator;
 
         for (Seat seat : Seat.values()) {
             playerContexts.put(seat, null);
@@ -37,6 +40,10 @@ public class Room {
 
     public Seat getCurrentSeat() {
         return currentSeat;
+    }
+
+    public ScoreCalculator getScoreCalculator() {
+        return scoreCalculator;
     }
 
     public GameEventPublisher getGameEventPublisher() {
