@@ -50,14 +50,14 @@ public class GameService {
         room.getCurrentGame().handleDiscard(player, response.getTile());
     }
 
-    public void handleClaimResponse(String roomId, String playerId, Decision decision, List<Tile> sheungCombo) {
+    public void handleDiscardClaim(String roomId, String playerId, Decision decision, List<Tile> sheungCombo) {
         Room room = roomManager.getRoom(roomId);
         Player player = findPlayerInRoom(room, playerId);
 
         room.getCurrentGame().handleClaimResponseFromDiscard(player, decision, sheungCombo);
     }
 
-    public void handleDrawDecision(String roomId, String playerId, Decision decision) {
+    public void handleDrawClaim(String roomId, String playerId, Decision decision) {
         Room room = roomManager.getRoom(roomId);
         Player player = findPlayerInRoom(room, playerId);
 

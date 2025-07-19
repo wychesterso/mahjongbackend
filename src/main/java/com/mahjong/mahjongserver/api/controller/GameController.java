@@ -26,7 +26,7 @@ public class GameController {
      * @param playerId the id of the player starting the game; should be the host.
      * @return
      */
-    @PostMapping("/{roomId}/start")
+    @PostMapping("/rooms/{roomId}/start")
     public ResponseEntity<Void> startGame(
             @PathVariable String roomId,
             @RequestParam String playerId) {
@@ -47,19 +47,19 @@ public class GameController {
         gameService.handleDiscardResponse(roomId, playerId, response);
     }
 
-    @MessageMapping("/game/respondDecision")
+    @MessageMapping("/game/respondDrawClaim")
     public void handleDrawDecision(DecisionResponseDTO response, Principal principal) {
         String playerId = principal.getName();
-        gameService.handleDrawDecision(response.getRoomId(), playerId, response.getDecision());
+        gameService.handleDrawClaim(response.getRoomId(), playerId, response.getDecision());
     }
 
-    @MessageMapping("/game/respondClaim")
+    @MessageMapping("/game/respondDiscardClaim")
     public void handleClaimDecision(ClaimResponseDTO response, Principal principal) {
         String playerId = principal.getName();
-        gameService.handleClaimResponse(response.getRoomId(), playerId, response.getDecision(), response.getSheungCombo());
+        gameService.handleDiscardClaim(response.getRoomId(), playerId, response.getDecision(), response.getSheungCombo());
     }
 
-    @MessageMapping("/game/decision/end")
+    @MessageMapping("/game/endGameDecision")
     public void handleEndGameDecision(EndGameDecisionDTO response, Principal principal) {
         String playerId = principal.getName();
         gameService.handleEndGameDecision(response.getRoomId(), playerId, response.getDecision());
