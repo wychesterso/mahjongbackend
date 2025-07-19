@@ -101,6 +101,16 @@ public class Room {
         playerContexts.put(seat, null);
     }
 
+    public void removePlayer(Player player) {
+        for (Seat seat : Seat.values()) {
+            PlayerContext ctx = playerContexts.get(seat);
+            if (ctx != null && ctx.getPlayer().equals(player)) {
+                removePlayer(seat);
+                return;
+            }
+        }
+    }
+
 //============================== GAME ==============================//
 
     public boolean startGame() {
@@ -109,6 +119,7 @@ public class Room {
             if (playerContexts.get(seat) == null) return false;
         }
 
+        gameEventPublisher.sendGameStart(roomId);
         currentGame = new Game(this, windSeat, zhongSeat);
 
         return true;

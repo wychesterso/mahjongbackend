@@ -52,6 +52,11 @@ public class RoomManager {
         room.addPlayer(seat, realPlayer, new RealPlayerDecisionHandler(eventPublisher));
     }
 
+    public void exitRoom(String roomId, Player realPlayer) {
+        Room room = getRoom(roomId);
+        room.removePlayer(realPlayer);
+    }
+
     /**
      * Returns the Room with the given ID.
      * @param roomId the unique room identifier.
@@ -71,19 +76,6 @@ public class RoomManager {
      */
     public void removeRoom(String roomId) {
         rooms.remove(roomId);
-    }
-
-    /**
-     * Assigns a player to a specific seat in a room.
-     * @param roomId the room ID.
-     * @param seat the seat to assign the player to.
-     * @param player the player object.
-     * @param decisionHandler the decision handler (bot or real player).
-     * @return true if successfully seated, false if seat is taken.
-     */
-    public boolean assignPlayerToSeat(String roomId, Seat seat, Player player, PlayerDecisionHandler decisionHandler) {
-        Room room = getRoom(roomId);
-        return room.addPlayer(seat, player, decisionHandler);
     }
 
     /**

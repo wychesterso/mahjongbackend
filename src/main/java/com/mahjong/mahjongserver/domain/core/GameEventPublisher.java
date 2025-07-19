@@ -48,6 +48,16 @@ public class GameEventPublisher {
     }
 
     /**
+     * Send a game-started message to all players in the room.
+     * @param roomId the id of the room.
+     */
+    public void sendGameStart(String roomId) {
+        sendToAll(roomId, Map.of(
+                "type", "game_start"
+        ));
+    }
+
+    /**
      * Send the current game state to a specified player.
      * @param playerId the id of the specified player.
      * @param tableDTO the latest representation of the game table.
@@ -60,14 +70,14 @@ public class GameEventPublisher {
     }
 
     /**
-     * Send a round-ended message to a specific player.
+     * Send a game-ended message to all players in the room.
      * @param roomId the id of the room.
      * @param result either "draw" or "win".
      * @param data additional result info (e.g. winner seats, final table state, score).
      */
-    public void sendGameEnded(String roomId, String result, Object data) {
+    public void sendGameEnd(String roomId, String result, Object data) {
         sendToAll(roomId, Map.of(
-                "type", "round_ended",
+                "type", "game_end",
                 "result", result,
                 "data", data
         ));

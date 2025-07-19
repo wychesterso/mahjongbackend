@@ -480,7 +480,7 @@ public class Game {
     public void endGameByDraw() {
         updateTableState();
 
-        room.getGameEventPublisher().sendGameEnded(
+        room.getGameEventPublisher().sendGameEnd(
                 room.getRoomId(),
                 "draw",
                 new EndGameDTO(Map.of(), Set.of(), DTOMapper.fromTable(table, null))
@@ -511,7 +511,7 @@ public class Game {
             loserSeats.add(currentSeat);
         }
 
-        room.getGameEventPublisher().sendGameEnded(
+        room.getGameEventPublisher().sendGameEnd(
                 room.getRoomId(),
                 "win",
                 new EndGameDTO(winners, loserSeats, DTOMapper.fromTable(table, null))
