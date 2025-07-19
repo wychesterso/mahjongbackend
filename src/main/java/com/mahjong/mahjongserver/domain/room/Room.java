@@ -100,7 +100,12 @@ public class Room {
         }
 
         currentGame = new Game(this, windSeat, zhongSeat);
+        gameEventPublisher.???;
 
         return true;
+    }
+
+    public void onGameEnd() {
+
     }
 }

@@ -65,7 +65,7 @@ public class GameEventPublisher {
      * @param result either "draw" or "win".
      * @param data additional result info (e.g. winner seats, final table state, score).
      */
-    public void sendRoundEnded(String roomId, String result, Object data) {
+    public void sendGameEnded(String roomId, String result, Object data) {
         sendToAll(roomId, Map.of(
                 "type", "round_ended",
                 "result", result,

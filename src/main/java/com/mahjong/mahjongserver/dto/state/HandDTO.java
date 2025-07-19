@@ -1,4 +1,4 @@
-package com.mahjong.mahjongserver.dto.table;
+package com.mahjong.mahjongserver.dto.state;
 
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 

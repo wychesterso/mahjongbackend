@@ -15,7 +15,9 @@ import com.mahjong.mahjongserver.domain.room.board.Hand;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.room.board.tile.TileClassification;
 import com.mahjong.mahjongserver.dto.mapper.DTOMapper;
-import com.mahjong.mahjongserver.dto.table.TableDTO;
+import com.mahjong.mahjongserver.dto.state.EndGameDTO;
+import com.mahjong.mahjongserver.dto.state.ScoringContextDTO;
+import com.mahjong.mahjongserver.dto.state.TableDTO;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -478,38 +480,44 @@ public class Game {
     public void endGameByDraw() {
         updateTableState();
 
-        room.getGameEventPublisher().sendRoundEnded(
+        room.getGameEventPublisher().sendGameEnded(
                 room.getRoomId(),
                 "draw",
-                Map.of(
-                        "table", DTOMapper.fromTable(table, null),  // or use a public version if needed
-                        "winners", List.of(),
-                        "reason", "Draw pile was exhausted. Game ended in a tie!"
-                )
+                new EndGameDTO(Map.of(), Set.of(), DTOMapper.fromTable(table, null))
         );
 
-        // TODO: Score update, transition each player to next game / exit
+        room.onGameEnd();
     }
 
     public void endGameByWin() {
         updateTableState();
 
-        // winnerSeats.add(seat of 1 or more players that won);
-
-        room.getGameEventPublisher().sendRoundEnded(
-                room.getRoomId(),
-                "draw",
-                Map.of(
-                        "table", DTOMapper.fromTable(table, null),  // or use a public version if needed
-                        "winners", winnerSeats,
-                        "reason", "Draw pile was exhausted. Game ended in a tie!"
-                )
-        );
-
-        // TODO: Score update, transition each player to next game / exit
+        // get winners and scoring
+        Map<Seat, ScoringContextDTO> winners = new HashMap<>();
         for (Seat seat : winnerSeats) {
             ScoringContext scoringContext = room.getScoreCalculator().calculateScore(this, seat);
+            winners.put(seat, DTOMapper.fromScoringContext(scoringContext));
         }
+
+        // get losers
+        Set<Seat> loserSeats = new HashSet<>();
+        if (winnerSeats.contains(currentSeat)) {
+            // self draw
+            for (Seat seat : Seat.values()) {
+                if (seat != currentSeat) loserSeats.add(seat);
+            }
+        } else {
+            // current seat is loser
+            loserSeats.add(currentSeat);
+        }
+
+        room.getGameEventPublisher().sendGameEnded(
+                room.getRoomId(),
+                "win",
+                new EndGameDTO(winners, loserSeats, DTOMapper.fromTable(table, null))
+        );
+
+        room.onGameEnd();
     }
 
 //============================== HELPERS ==============================//
@@ -534,8 +542,7 @@ public class Game {
 
     private int distanceFromCurrentSeat(Seat seat) {
         Seat ref = currentSeat.next();
-        int diff = (seat.ordinal() - ref.ordinal() + 4) % 4;
-        return diff;
+        return (seat.ordinal() - ref.ordinal() + 4) % 4;
     }
 
     private void resetClaims() {
