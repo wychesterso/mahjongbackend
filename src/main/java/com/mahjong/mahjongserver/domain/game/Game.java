@@ -500,7 +500,7 @@ public class Game {
         }
 
         // get losers
-        Set<Seat> loserSeats = new HashSet<>();
+        Set<Seat> loserSeats = EnumSet.noneOf(Seat.class);
         if (winnerSeats.contains(currentSeat)) {
             // self draw
             for (Seat seat : Seat.values()) {

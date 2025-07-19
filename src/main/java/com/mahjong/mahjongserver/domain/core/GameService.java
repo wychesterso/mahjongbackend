@@ -6,6 +6,7 @@ import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import com.mahjong.mahjongserver.dto.response.DiscardResponseDTO;
+import com.mahjong.mahjongserver.domain.player.decision.EndGameDecision;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,13 +26,17 @@ public class GameService {
     /**
      * Starts the game in the given room if all seats are filled.
      */
-    public void startGame(String roomId) {
+    public void startGame(String roomId, String playerId) {
         Room room = roomManager.getRoom(roomId);
+        if (!room.getHost().getId().equals(playerId)) {
+            throw new SecurityException("Only host can start the game.");
+        }
+
         boolean success = room.startGame();
         if (success) {
-            room.getCurrentGame().startGame();  // start game loop
+            room.getCurrentGame().startGame();
         } else {
-            throw new IllegalStateException("Not all seats are filled in room: " + roomId);
+            throw new IllegalStateException("Not all seats are filled.");
         }
     }
 
@@ -70,6 +75,15 @@ public class GameService {
         Player player = findPlayerInRoom(room, playerId);
         room.getCurrentGame().handleAutoPassClaim(player);
     }
+
+    public void handleEndGameDecision(String roomId, String playerId, EndGameDecision decision) {
+        Room room = roomManager.getRoom(roomId);
+        Player player = findPlayerInRoom(room, playerId);
+
+        room.collectEndGameDecision(player, decision);
+    }
+
+// HELPER
 
     /**
      * Locates a player in the room based on their unique ID.

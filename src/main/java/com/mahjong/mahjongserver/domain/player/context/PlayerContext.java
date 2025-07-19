@@ -2,8 +2,6 @@ package com.mahjong.mahjongserver.domain.player.context;
 
 import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.decision.PlayerDecisionHandler;
-import com.mahjong.mahjongserver.domain.room.Seat;
-import com.mahjong.mahjongserver.domain.room.board.Hand;
 
 public class PlayerContext {
     private final Player player;

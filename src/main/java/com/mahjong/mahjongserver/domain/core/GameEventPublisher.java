@@ -72,4 +72,10 @@ public class GameEventPublisher {
                 "data", data
         ));
     }
+
+    public void sendSessionEnded(String roomId) {
+        sendToAll(roomId, Map.of(
+                "type", "session_ended"
+        ));
+    }
 }

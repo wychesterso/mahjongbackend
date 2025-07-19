@@ -6,12 +6,14 @@ import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
 import com.mahjong.mahjongserver.domain.player.decision.PlayerDecisionHandler;
 import com.mahjong.mahjongserver.domain.core.GameEventPublisher;
+import com.mahjong.mahjongserver.domain.player.decision.EndGameDecision;
 import com.mahjong.mahjongserver.infrastructure.TimeoutScheduler;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class Room {
+    private Player host;
     private Map<Seat, PlayerContext> playerContexts = new HashMap<>();
     private Game currentGame = null;
     private Seat windSeat = Seat.EAST;
@@ -21,12 +23,15 @@ public class Room {
     private GameEventPublisher gameEventPublisher;
     private String roomId;
 
-    private TimeoutScheduler timeoutScheduler;
+    private final TimeoutScheduler timeoutScheduler = new TimeoutScheduler();
 
-    public Room(GameEventPublisher gameEventPublisher, String roomId, ScoreCalculator scoreCalculator) {
+    private final Map<Player, EndGameDecision> endGameDecisions = new HashMap<>();
+
+    public Room(GameEventPublisher gameEventPublisher, String roomId, ScoreCalculator scoreCalculator, Player host) {
         this.gameEventPublisher = gameEventPublisher;
         this.roomId = roomId;
         this.scoreCalculator = scoreCalculator;
+        this.host = host;
 
         for (Seat seat : Seat.values()) {
             playerContexts.put(seat, null);
@@ -34,6 +39,10 @@ public class Room {
     }
 
 //============================== GETTERS ==============================//
+
+    public Player getHost() {
+        return host;
+    }
 
     public Game getCurrentGame() {
         return currentGame;
@@ -71,7 +80,8 @@ public class Room {
 
     public Seat getSeat(Player player) {
         for (Seat seat : Seat.values()) {
-            if (getPlayerContext(seat).getPlayer() == player) {
+            PlayerContext context = getPlayerContext(seat);
+            if (context != null && context.getPlayer() == player) {
                 return seat;
             }
         }
@@ -100,12 +110,46 @@ public class Room {
         }
 
         currentGame = new Game(this, windSeat, zhongSeat);
-        gameEventPublisher.???;
 
         return true;
     }
 
     public void onGameEnd() {
+        if (currentGame == null) return;
 
+        // ask each player for decision
+        for (Seat seat : Seat.values()) {
+            PlayerContext context = playerContexts.get(seat);
+            if (context != null) {
+                context.getDecisionHandler().promptEndGameDecision(context, this);
+            }
+        }
+    }
+
+    public void collectEndGameDecision(Player player, EndGameDecision decision) {
+        endGameDecisions.put(player, decision);
+
+        if (endGameDecisions.size() == playerContexts.size()) {
+            processEndGameDecisions();
+            endGameDecisions.clear();
+        }
+    }
+
+    private void processEndGameDecisions() {
+        boolean allWantAnotherGame = endGameDecisions.values().stream()
+                .allMatch(decision -> decision == EndGameDecision.NEXT_GAME);
+
+        if (allWantAnotherGame) {
+            rotateSeatsAfterGame();
+            startGame();
+        } else {
+            // TODO: Rotate in new players or bots to replace exiting players
+            gameEventPublisher.sendSessionEnded(roomId); // close room
+        }
+    }
+
+    private void rotateSeatsAfterGame() {
+        zhongSeat = zhongSeat.next();
+        if (zhongSeat == Seat.EAST) windSeat = windSeat.next();
     }
 }

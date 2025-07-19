@@ -1,6 +1,7 @@
 package com.mahjong.mahjongserver.domain.player.decision;
 
 import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
+import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import com.mahjong.mahjongserver.dto.state.TableDTO;
@@ -55,6 +56,15 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
                         "table", table,
                         "drawn_tile", drawnTile
                 )
+        );
+    }
+
+    @Override
+    public void promptEndGameDecision(PlayerContext ctx, Room room) {
+        publisher.sendPrompt(
+                ctx.getPlayer().getId(),
+                "prompt_end_game_decision",
+                null
         );
     }
 }

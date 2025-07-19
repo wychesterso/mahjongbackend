@@ -2,8 +2,11 @@ package com.mahjong.mahjongserver.domain.core;
 
 import com.mahjong.mahjongserver.domain.core.GameEventPublisher;
 import com.mahjong.mahjongserver.domain.game.score.ScoreCalculator;
+import com.mahjong.mahjongserver.domain.player.Bot;
 import com.mahjong.mahjongserver.domain.player.Player;
+import com.mahjong.mahjongserver.domain.player.decision.BotDecisionHandler;
 import com.mahjong.mahjongserver.domain.player.decision.PlayerDecisionHandler;
+import com.mahjong.mahjongserver.domain.player.decision.RealPlayerDecisionHandler;
 import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import org.springframework.stereotype.Component;
@@ -29,13 +32,24 @@ public class RoomManager {
      * @param roomId the unique identifier for the room.
      * @return the created Room instance.
      */
-    public Room createRoom(String roomId, ScoreCalculator scoreCalculator) {
+    public Room createRoom(String roomId, ScoreCalculator scoreCalculator, Player host) {
         if (rooms.containsKey(roomId)) {
             throw new IllegalArgumentException("Room already exists: " + roomId);
         }
-        Room room = new Room(eventPublisher, roomId, scoreCalculator);
+        Room room = new Room(eventPublisher, roomId, scoreCalculator, host);
         rooms.put(roomId, room);
         return room;
+    }
+
+    public void assignBotToSeat(String roomId, Seat seat, String botId) {
+        Room room = getRoom(roomId);
+        Bot bot = new Bot(botId);
+        room.addPlayer(seat, bot, new BotDecisionHandler());
+    }
+
+    public void joinRoom(String roomId, Seat seat, Player realPlayer) {
+        Room room = getRoom(roomId);
+        room.addPlayer(seat, realPlayer, new RealPlayerDecisionHandler(eventPublisher));
     }
 
     /**
