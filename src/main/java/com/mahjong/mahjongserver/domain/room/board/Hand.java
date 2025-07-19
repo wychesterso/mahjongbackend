@@ -2,9 +2,7 @@ package com.mahjong.mahjongserver.domain.room.board;
 
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class Hand {
     private final List<Tile> concealedTiles = new ArrayList<>();
@@ -12,7 +10,7 @@ public class Hand {
     private final List<List<Tile>> pongs = new ArrayList<>();
     private final List<List<Tile>> brightKongs = new ArrayList<>();
     private final List<List<Tile>> darkKongs = new ArrayList<>();
-    private final List<Tile> flowers = new ArrayList<>();
+    private final Set<Tile> flowers = new HashSet<>();
 
 //============================== GETTERS ==============================//
 
@@ -40,7 +38,7 @@ public class Hand {
         return darkKongs;
     }
 
-    public List<Tile> getFlowers() {
+    public Set<Tile> getFlowers() {
         return flowers;
     }
 

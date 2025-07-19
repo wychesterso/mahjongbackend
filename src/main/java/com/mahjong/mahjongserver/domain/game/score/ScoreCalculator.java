@@ -1,10 +1,11 @@
 package com.mahjong.mahjongserver.domain.game.score;
 
 import com.mahjong.mahjongserver.domain.game.Game;
+import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
 import com.mahjong.mahjongserver.domain.room.Seat;
 
 public interface ScoreCalculator {
-    ScoringResult calculateScore(Game game, Seat seat);
+    ScoringContext calculateScore(Game game, Seat seat);
 
 
 //    private int calculateScore(List<List<Tile>> highestHand, List<Score> highestPoints,

@@ -3,6 +3,7 @@ package com.mahjong.mahjongserver.dto.table;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 
 import java.util.List;
+import java.util.Set;
 
 public class HandDTO {
     // concealed hand
@@ -15,7 +16,7 @@ public class HandDTO {
     private final List<List<Tile>> brightKongs;
     private final List<List<Tile>> darkKongs; // only populate for self's hand; null otherwise
     private final int darkKongCount;
-    private final List<Tile> flowers;
+    private final Set<Tile> flowers;
 
     public HandDTO(List<Tile> concealedTiles,
                    int concealedTileCount,
@@ -24,7 +25,7 @@ public class HandDTO {
                    List<List<Tile>> brightKongs,
                    List<List<Tile>> darkKongs,
                    int darkKongCount,
-                   List<Tile> flowers) {
+                   Set<Tile> flowers) {
         this.concealedTiles = concealedTiles;
         this.concealedTileCount = concealedTileCount;
         this.sheungs = sheungs;
@@ -63,7 +64,7 @@ public class HandDTO {
         return darkKongCount;
     }
 
-    public List<Tile> getFlowers() {
+    public Set<Tile> getFlowers() {
         return flowers;
     }
 }

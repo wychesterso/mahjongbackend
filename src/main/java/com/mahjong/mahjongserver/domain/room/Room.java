@@ -14,7 +14,8 @@ import java.util.Map;
 public class Room {
     private Map<Seat, PlayerContext> playerContexts = new HashMap<>();
     private Game currentGame = null;
-    private Seat currentSeat = Seat.EAST;
+    private Seat windSeat = Seat.EAST;
+    private Seat zhongSeat = Seat.EAST;
     private ScoreCalculator scoreCalculator;
 
     private GameEventPublisher gameEventPublisher;
@@ -38,8 +39,12 @@ public class Room {
         return currentGame;
     }
 
-    public Seat getCurrentSeat() {
-        return currentSeat;
+    public Seat getWindSeat() {
+        return windSeat;
+    }
+
+    public Seat getZhongSeat() {
+        return zhongSeat;
     }
 
     public ScoreCalculator getScoreCalculator() {
@@ -94,7 +99,7 @@ public class Room {
             if (playerContexts.get(seat) == null) return false;
         }
 
-        currentGame = new Game(this, currentSeat);
+        currentGame = new Game(this, windSeat, zhongSeat);
 
         return true;
     }

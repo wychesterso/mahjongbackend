@@ -46,10 +46,10 @@ public enum Tile {
     FLOWER_SUMMER(TileType.SEASON, 2),
     FLOWER_AUTUMN(TileType.SEASON, 3),
     FLOWER_WINTER(TileType.SEASON, 4),
-    FLOWER_MUI(TileType.PLANT, 5),
-    FLOWER_LAN(TileType.PLANT, 6),
-    FLOWER_KUK(TileType.PLANT, 7),
-    FLOWER_CHUK(TileType.PLANT, 8);
+    FLOWER_PLUM(TileType.PLANT, 1),
+    FLOWER_ORCHID(TileType.PLANT, 2),
+    FLOWER_CHRYSANTHEMUM(TileType.PLANT, 3),
+    FLOWER_BAMBOO(TileType.PLANT, 4);
 
     private final TileType tileType;
     private final int tileNum;

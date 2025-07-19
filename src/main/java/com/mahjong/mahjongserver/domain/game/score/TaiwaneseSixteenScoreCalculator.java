@@ -1,6 +1,9 @@
 package com.mahjong.mahjongserver.domain.game.score;
 
 import com.mahjong.mahjongserver.domain.game.Game;
+import com.mahjong.mahjongserver.domain.game.score.data.GroupedHand;
+import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
+import com.mahjong.mahjongserver.domain.game.score.matcher.*;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.Table;
 import com.mahjong.mahjongserver.domain.room.board.Hand;
@@ -13,7 +16,7 @@ public class TaiwaneseSixteenScoreCalculator implements ScoreCalculator {
 
 //============================== ENTRY POINT ==============================//
 
-    public ScoringResult calculateScore(Game game, Seat winnerSeat) {
+    public ScoringContext calculateScore(Game game, Seat winnerSeat) {
         // get table and hand
         Table table = game.getTable();
         Hand hand = table.getHand(winnerSeat);
@@ -22,48 +25,40 @@ public class TaiwaneseSixteenScoreCalculator implements ScoreCalculator {
         List<Tile> concealedTiles = hand.getConcealedTiles();
         List<List<List<Tile>>> groupings = HandGrouper.getValidGroupings(concealedTiles);
 
-        // get game info
-        Seat loserSeat = game.getCurrentSeat();
-        boolean selfDraw = winnerSeat == loserSeat;
-        Tile winningTile = hand.getLastDrawnTile();
-
-        ScoringResult bestScoringResult = null;
+        ScoringContext bestScoringContext = null;
 
         // determine which grouping gives the best score
         for (List<List<Tile>> grouping : groupings) {
-            ScoringResult scoringResult = calculateScoreForGrouping(grouping, hand, winningTile, selfDraw);
-            if (bestScoringResult == null || scoringResult.getScore() > bestScoringResult.getScore()) {
-                bestScoringResult = scoringResult;
+            GroupedHand groupedHand = new GroupedHand(grouping, hand);
+            ScoringContext scoringContext = new ScoringContext(game, winnerSeat, groupedHand);
+            calculateScoreForGrouping(scoringContext);
+
+            if (bestScoringContext == null || scoringContext.getScore() > bestScoringContext.getScore()) {
+                bestScoringContext = scoringContext;
             }
         }
 
-        return bestScoringResult;
+        return bestScoringContext;
     }
 
 //============================== SCORES ==============================//
 
-    private ScoringResult calculateScoreForGrouping(List<List<Tile>> grouping,
-                                          Hand hand,
-                                          Tile winningTile,
-                                          boolean selfDraw) {
+    private static final List<ScoringPatternMatcher> matchers = List.of(
+            new GeneralMatcher(),
+            new FlowerMatcher(),
+            new WindMatcher(),
+            new DragonMatcher(),
+            new AllSheungsMatcher(),
+            new FrontAndBackMatcher()
+    );
+
+    private void calculateScoreForGrouping(ScoringContext scoringContext) {
         // get groupings
-        List<List<Tile>> concealedPairs = HandGrouper.getConcealedPairs(grouping);
-        List<List<Tile>> concealedSheungs = HandGrouper.getConcealedSheungs(grouping);
-        List<List<Tile>> revealedSheungs = hand.getSheungs();
-        List<List<Tile>> concealedPongs = HandGrouper.getConcealedPongs(grouping);
-        List<List<Tile>> revealedPongs = hand.getPongs();
-        List<List<Tile>> brightKongs = hand.getBrightKongs();
-        List<List<Tile>> darkKongs = hand.getDarkKongs();
+        GroupedHand groupedHand = scoringContext.getGroupedHand();
 
-        // TODO: accumulate scoring patterns
-        List<ScoringPattern> scoringPatterns = new ArrayList<>();
-
-        // tally scores
-        int score = 0;
-        for (ScoringPattern scoringPattern : scoringPatterns) {
-            score += scoringPattern.getValue();
+        // accumulate scoring patterns inside scoringContext
+        for (ScoringPatternMatcher matcher : matchers) {
+            matcher.match(scoringContext);
         }
-
-        return new ScoringResult(score, grouping, scoringPatterns);
     }
 }

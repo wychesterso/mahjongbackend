@@ -3,7 +3,7 @@ package com.mahjong.mahjongserver.domain.game;
 import com.mahjong.mahjongserver.domain.game.claim.ClaimOption;
 import com.mahjong.mahjongserver.domain.game.claim.ClaimResolution;
 import com.mahjong.mahjongserver.domain.game.score.HandChecker;
-import com.mahjong.mahjongserver.domain.game.score.ScoringResult;
+import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
 import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
 import com.mahjong.mahjongserver.domain.player.decision.Decision;
@@ -23,6 +23,8 @@ import java.util.function.Supplier;
 public class Game {
     // gameplay info
     private final Table table = new Table();
+    private final Seat windSeat;
+    private final Seat zhongSeat;
     private Seat currentSeat;
 
     // game statistics and scoring
@@ -35,14 +37,18 @@ public class Game {
     private final Map<Seat, ClaimResolution> claimResponses = new HashMap<>();
     private static final long TIMEOUT_MILLIS = 10_000;
 
-    public Game(Room room) {
+    public Game(Room room, Seat windSeat) {
         this.room = room;
+        this.windSeat = windSeat;
+        zhongSeat = Seat.EAST;
         currentSeat = Seat.EAST;
     }
 
-    public Game(Room room, Seat seat) {
+    public Game(Room room, Seat windSeat, Seat zhongSeat) {
         this.room = room;
-        currentSeat = seat;
+        this.windSeat = windSeat;
+        this.zhongSeat = zhongSeat;
+        currentSeat = zhongSeat;
     }
 
 //============================== GETTERS ==============================//
@@ -53,6 +59,14 @@ public class Game {
 
     public Board getBoard() {
         return table.getBoard();
+    }
+
+    public Seat getWindSeat() {
+        return windSeat;
+    }
+
+    public Seat getZhongSeat() {
+        return zhongSeat;
     }
 
     public Seat getCurrentSeat() {
@@ -494,7 +508,7 @@ public class Game {
 
         // TODO: Score update, transition each player to next game / exit
         for (Seat seat : winnerSeats) {
-            ScoringResult scoringResult = room.getScoreCalculator().calculateScore(this, seat);
+            ScoringContext scoringContext = room.getScoreCalculator().calculateScore(this, seat);
         }
     }
 
