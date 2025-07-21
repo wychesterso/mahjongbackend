@@ -57,11 +57,10 @@ public class RoomController {
     public ResponseEntity<Void> addBot(
             @PathVariable String roomId,
             @RequestParam Seat seat,
-            @RequestParam String botId,
             Principal principal) throws AccessDeniedException {
         String playerId = principal.getName();
 
-        roomManager.assignBotToSeat(roomId, seat, botId, playerId);
+        roomManager.assignBotToSeat(roomId, seat, playerId);
         return ResponseEntity.ok().build();
     }
 

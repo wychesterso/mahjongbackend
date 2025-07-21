@@ -2,7 +2,6 @@ package com.mahjong.mahjongserver.domain.room;
 
 import com.mahjong.mahjongserver.domain.game.Game;
 import com.mahjong.mahjongserver.domain.game.score.ScoreCalculator;
-import com.mahjong.mahjongserver.domain.player.Bot;
 import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
 import com.mahjong.mahjongserver.domain.player.decision.PlayerDecisionHandler;
@@ -47,6 +46,14 @@ public class Room {
 
     public String getHostId() {
         return host.getId();
+    }
+
+    public void setHost(Player player) {
+        host = player;
+    }
+
+    public Map<Seat, PlayerContext> getPlayerContexts() {
+        return playerContexts;
     }
 
     public Game getCurrentGame() {

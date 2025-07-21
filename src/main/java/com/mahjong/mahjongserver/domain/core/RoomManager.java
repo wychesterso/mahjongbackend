@@ -3,6 +3,8 @@ package com.mahjong.mahjongserver.domain.core;
 import com.mahjong.mahjongserver.domain.game.score.ScoreCalculator;
 import com.mahjong.mahjongserver.domain.player.Bot;
 import com.mahjong.mahjongserver.domain.player.Player;
+import com.mahjong.mahjongserver.domain.player.RealPlayer;
+import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
 import com.mahjong.mahjongserver.domain.player.decision.BotDecisionHandler;
 import com.mahjong.mahjongserver.domain.player.decision.RealPlayerDecisionHandler;
 import com.mahjong.mahjongserver.domain.room.Room;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.file.AccessDeniedException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -40,16 +43,22 @@ public class RoomManager {
         return room;
     }
 
-    public void assignBotToSeat(String roomId, Seat seat, String botId, String requesterId) throws AccessDeniedException {
+    public void assignBotToSeat(String roomId, Seat seat, String requesterId) throws AccessDeniedException {
         Room room = getRoom(roomId);
         if (!room.getHostId().equals(requesterId)) {
             throw new AccessDeniedException("Only host can add bots!");
         }
-        if (room.botIdExists(botId)) {
-            throw new IllegalArgumentException("Bot ID already exists in room");
-        }
-        Bot bot = new Bot(botId);
+        Bot bot = new Bot(generateNextBotId(room));
         room.addPlayer(seat, bot, new BotDecisionHandler());
+    }
+
+    private String generateNextBotId(Room room) {
+        int index = 1;
+        while (true) {
+            String candidateId = "bot" + index;
+            if (!room.containsPlayer(candidateId)) return candidateId;
+            index++;
+        }
     }
 
     public void joinRoom(String roomId, Seat seat, Player realPlayer) {
@@ -64,7 +73,29 @@ public class RoomManager {
 
     public void exitRoom(String roomId, Player realPlayer) {
         Room room = getRoom(roomId);
+
+        if (!room.containsPlayer(realPlayer.getId())) {
+            throw new IllegalStateException("Player not in room!");
+        }
+
+        boolean wasHost = room.getHost().getId().equals(realPlayer.getId());
         room.removePlayer(realPlayer);
+
+        if (wasHost) {
+            // find next real player and assign them as host
+            Optional<RealPlayer> nextReal = room.getPlayerContexts().values().stream()
+                    .map(PlayerContext::getPlayer)
+                    .filter(p -> p instanceof RealPlayer)
+                    .map(p -> (RealPlayer) p)
+                    .findFirst();
+
+            if (nextReal.isPresent()) {
+                room.setHost(nextReal.get());
+            } else {
+                // no more real players - close room
+                removeRoom(roomId);
+            }
+        }
     }
 
     /**
