@@ -7,6 +7,7 @@ import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import com.mahjong.mahjongserver.dto.response.DiscardResponseDTO;
 import com.mahjong.mahjongserver.domain.player.decision.EndGameDecision;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,15 +29,18 @@ public class GameService {
      */
     public void startGame(String roomId, String playerId) {
         Room room = roomManager.getRoom(roomId);
-        if (!room.getHost().getId().equals(playerId)) {
-            throw new SecurityException("Only host can start the game.");
+        if (!room.getHostId().equals(playerId)) {
+            throw new AccessDeniedException("Only the host can start the game!");
+        }
+        if (room.getCurrentGame() != null && room.getCurrentGame().isActiveGame()) {
+            throw new IllegalStateException("Game in progress!");
         }
 
         boolean success = room.startGame();
         if (success) {
             room.getCurrentGame().startGame();
         } else {
-            throw new IllegalStateException("Not all seats are filled.");
+            throw new IllegalStateException("Not all seats are filled!");
         }
     }
 

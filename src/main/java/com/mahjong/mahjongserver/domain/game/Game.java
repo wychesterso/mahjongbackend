@@ -23,6 +23,8 @@ import java.util.*;
 import java.util.function.Supplier;
 
 public class Game {
+    private boolean activeGame = false;
+
     // gameplay info
     private final Table table = new Table();
     private final Seat windSeat;
@@ -55,6 +57,10 @@ public class Game {
 
 //============================== GETTERS ==============================//
 
+    public boolean isActiveGame() {
+        return activeGame;
+    }
+
     public Table getTable() {
         return table;
     }
@@ -82,6 +88,7 @@ public class Game {
 //============================== EVENTS ==============================//
 
     public void startGame() {
+        activeGame = true;
         dealStartingHands();
         if (handleClaimsAfterDraw(table.getHand(currentSeat).getLastDrawnTile())) return;
         startTurnWithoutDraw();
@@ -478,6 +485,7 @@ public class Game {
 //============================== GAME END ==============================//
 
     public void endGameByDraw() {
+        activeGame = false;
         updateTableState();
 
         room.getGameEventPublisher().sendGameEnd(
@@ -490,6 +498,7 @@ public class Game {
     }
 
     public void endGameByWin() {
+        activeGame = false;
         updateTableState();
 
         // get winners and scoring

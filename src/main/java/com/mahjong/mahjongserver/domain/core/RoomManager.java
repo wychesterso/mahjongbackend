@@ -1,5 +1,6 @@
 package com.mahjong.mahjongserver.domain.core;
 
+import com.mahjong.mahjongserver.config.exception.RoomNotFoundException;
 import com.mahjong.mahjongserver.domain.game.score.ScoreCalculator;
 import com.mahjong.mahjongserver.domain.player.Bot;
 import com.mahjong.mahjongserver.domain.player.Player;
@@ -9,9 +10,9 @@ import com.mahjong.mahjongserver.domain.player.decision.BotDecisionHandler;
 import com.mahjong.mahjongserver.domain.player.decision.RealPlayerDecisionHandler;
 import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.AccessDeniedException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,7 +44,7 @@ public class RoomManager {
         return room;
     }
 
-    public void assignBotToSeat(String roomId, Seat seat, String requesterId) throws AccessDeniedException {
+    public void assignBotToSeat(String roomId, Seat seat, String requesterId) {
         Room room = getRoom(roomId);
         if (!room.getHostId().equals(requesterId)) {
             throw new AccessDeniedException("Only host can add bots!");
@@ -79,7 +80,12 @@ public class RoomManager {
         }
 
         boolean wasHost = room.getHost().getId().equals(realPlayer.getId());
+        Seat seat = room.getSeat(realPlayer);
         room.removePlayer(realPlayer);
+        if (room.getCurrentGame().isActiveGame()) {
+            Bot bot = new Bot(generateNextBotId(room));
+            room.addPlayer(seat, bot, new BotDecisionHandler());
+        }
 
         if (wasHost) {
             // find next real player and assign them as host
@@ -102,12 +108,12 @@ public class RoomManager {
      * Returns the Room with the given ID.
      * @param roomId the unique room identifier.
      * @return the corresponding Room.
-     * @throws IllegalArgumentException if no Room with given ID exists.
+     * @throws RoomNotFoundException if no Room with given ID exists.
      */
     public Room getRoom(String roomId) {
         Room room = rooms.get(roomId);
         if (room == null) {
-            throw new IllegalArgumentException("Room not found: " + roomId);
+            throw new RoomNotFoundException("Room not found: " + roomId);
         }
         return room;
     }

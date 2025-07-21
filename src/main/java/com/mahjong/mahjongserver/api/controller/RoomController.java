@@ -6,9 +6,9 @@ import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.RealPlayer;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.AccessDeniedException;
 import java.security.Principal;
 
 @RestController
@@ -57,7 +57,7 @@ public class RoomController {
     public ResponseEntity<Void> addBot(
             @PathVariable String roomId,
             @RequestParam Seat seat,
-            Principal principal) throws AccessDeniedException {
+            Principal principal) {
         String playerId = principal.getName();
 
         roomManager.assignBotToSeat(roomId, seat, playerId);
