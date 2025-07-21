@@ -8,6 +8,9 @@ import com.mahjong.mahjongserver.domain.room.Seat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
+import java.security.Principal;
+
 @RestController
 @RequestMapping("/room")
 public class RoomController {
@@ -24,9 +27,10 @@ public class RoomController {
     @PostMapping("/create")
     public ResponseEntity<Void> createRoom(
             @RequestParam String roomId,
-            @RequestParam String hostPlayerId) {
+            Principal principal) {
+        String playerId = principal.getName();
 
-        Player host = new RealPlayer(hostPlayerId); // use your factory or domain model
+        Player host = new RealPlayer(playerId);
         roomManager.createRoom(roomId, new TaiwaneseSixteenScoreCalculator(), host);
         return ResponseEntity.ok().build();
     }
@@ -37,8 +41,9 @@ public class RoomController {
     @PostMapping("/{roomId}/join")
     public ResponseEntity<Void> joinRoom(
             @PathVariable String roomId,
-            @RequestParam String playerId,
-            @RequestParam Seat seat) {
+            @RequestParam Seat seat,
+            Principal principal) {
+        String playerId = principal.getName();
 
         Player player = new RealPlayer(playerId);
         roomManager.joinRoom(roomId, seat, player);
@@ -52,9 +57,11 @@ public class RoomController {
     public ResponseEntity<Void> addBot(
             @PathVariable String roomId,
             @RequestParam Seat seat,
-            @RequestParam String botId) {
+            @RequestParam String botId,
+            Principal principal) throws AccessDeniedException {
+        String playerId = principal.getName();
 
-        roomManager.assignBotToSeat(roomId, seat, botId);
+        roomManager.assignBotToSeat(roomId, seat, botId, playerId);
         return ResponseEntity.ok().build();
     }
 
@@ -64,7 +71,8 @@ public class RoomController {
     @PostMapping("/{roomId}/exit")
     public ResponseEntity<Void> exitRoom(
             @PathVariable String roomId,
-            @RequestParam String playerId) {
+            Principal principal) {
+        String playerId = principal.getName();
 
         Player player = new RealPlayer(playerId);
         roomManager.exitRoom(roomId, player);

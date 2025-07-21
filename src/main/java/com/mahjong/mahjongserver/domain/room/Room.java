@@ -2,6 +2,7 @@ package com.mahjong.mahjongserver.domain.room;
 
 import com.mahjong.mahjongserver.domain.game.Game;
 import com.mahjong.mahjongserver.domain.game.score.ScoreCalculator;
+import com.mahjong.mahjongserver.domain.player.Bot;
 import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
 import com.mahjong.mahjongserver.domain.player.decision.PlayerDecisionHandler;
@@ -44,6 +45,10 @@ public class Room {
         return host;
     }
 
+    public String getHostId() {
+        return host.getId();
+    }
+
     public Game getCurrentGame() {
         return currentGame;
     }
@@ -70,6 +75,13 @@ public class Room {
 
     public TimeoutScheduler getTimeoutScheduler() {
         return timeoutScheduler;
+    }
+
+    public boolean botIdExists(String botId) {
+        for (PlayerContext ctx : playerContexts.values()) {
+            if (ctx.getPlayer().getId().equals(botId)) return true;
+        }
+        return false;
     }
 
     //============================== SEATING ==============================//
@@ -109,6 +121,13 @@ public class Room {
                 return;
             }
         }
+    }
+
+    public boolean containsPlayer(String playerId) {
+        for (Seat seat : Seat.values()) {
+            if (getPlayerContext(seat).getPlayer().getId().equals(playerId)) return true;
+        }
+        return false;
     }
 
 //============================== GAME ==============================//

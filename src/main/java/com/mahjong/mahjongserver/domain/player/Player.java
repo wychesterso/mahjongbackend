@@ -23,7 +23,7 @@ public abstract class Player {
         this.id = id;
     }
 
-    abstract boolean isBot();
+    public abstract boolean isBot();
 
 //============================== UPDATE SCORE ==============================//
 

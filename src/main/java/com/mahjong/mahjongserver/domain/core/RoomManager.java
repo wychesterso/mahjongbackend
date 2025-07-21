@@ -1,16 +1,15 @@
 package com.mahjong.mahjongserver.domain.core;
 
-import com.mahjong.mahjongserver.domain.core.GameEventPublisher;
 import com.mahjong.mahjongserver.domain.game.score.ScoreCalculator;
 import com.mahjong.mahjongserver.domain.player.Bot;
 import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.decision.BotDecisionHandler;
-import com.mahjong.mahjongserver.domain.player.decision.PlayerDecisionHandler;
 import com.mahjong.mahjongserver.domain.player.decision.RealPlayerDecisionHandler;
 import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import org.springframework.stereotype.Component;
 
+import java.nio.file.AccessDeniedException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -41,14 +40,25 @@ public class RoomManager {
         return room;
     }
 
-    public void assignBotToSeat(String roomId, Seat seat, String botId) {
+    public void assignBotToSeat(String roomId, Seat seat, String botId, String requesterId) throws AccessDeniedException {
         Room room = getRoom(roomId);
+        if (!room.getHostId().equals(requesterId)) {
+            throw new AccessDeniedException("Only host can add bots!");
+        }
+        if (room.botIdExists(botId)) {
+            throw new IllegalArgumentException("Bot ID already exists in room");
+        }
         Bot bot = new Bot(botId);
         room.addPlayer(seat, bot, new BotDecisionHandler());
     }
 
     public void joinRoom(String roomId, Seat seat, Player realPlayer) {
         Room room = getRoom(roomId);
+
+        if (room.containsPlayer(realPlayer.getId())) {
+            throw new IllegalStateException("Player already in room!");
+        }
+
         room.addPlayer(seat, realPlayer, new RealPlayerDecisionHandler(eventPublisher));
     }
 
@@ -61,6 +71,7 @@ public class RoomManager {
      * Returns the Room with the given ID.
      * @param roomId the unique room identifier.
      * @return the corresponding Room.
+     * @throws IllegalArgumentException if no Room with given ID exists.
      */
     public Room getRoom(String roomId) {
         Room room = rooms.get(roomId);

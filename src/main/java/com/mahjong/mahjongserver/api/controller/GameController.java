@@ -23,13 +23,14 @@ public class GameController {
     /**
      * Starts a game in an active room with full seats.
      * @param roomId the id of the room to start a game in.
-     * @param playerId the id of the player starting the game; should be the host.
+     * @param principal the authenticated player info.
      * @return
      */
     @PostMapping("/rooms/{roomId}/start")
     public ResponseEntity<Void> startGame(
             @PathVariable String roomId,
-            @RequestParam String playerId) {
+            Principal principal) {
+        String playerId = principal.getName();
 
         gameService.startGame(roomId, playerId);
         return ResponseEntity.ok().build();
