@@ -1,6 +1,7 @@
 package com.mahjong.mahjongserver.dto.mapper;
 
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
+import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.Table;
 import com.mahjong.mahjongserver.domain.room.board.Hand;
@@ -70,5 +71,14 @@ public class DTOMapper {
 
     public static TileGroupDTO fromTileGroup(Collection<Tile> tileGroup, String type) {
         return new TileGroupDTO(type, new ArrayList<>(tileGroup));
+    }
+
+    public static RoomInfoDTO fromRoom(Room room) {
+        return new RoomInfoDTO(
+                room.getRoomId(),
+                room.getHostId(),
+                room.getNumEmptySeats(),
+                room.getPlayerNames()
+        );
     }
 }

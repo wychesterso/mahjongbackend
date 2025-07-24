@@ -52,8 +52,27 @@ public class Room {
         host = player;
     }
 
+    public Map<Seat, String> getPlayerNames() {
+        Map<Seat, String> playerSeatMap = new HashMap<>();
+        for (Map.Entry<Seat, PlayerContext> entry : playerContexts.entrySet()) {
+            PlayerContext ctx = entry.getValue();
+            if (ctx != null) {
+                playerSeatMap.put(entry.getKey(), ctx.getPlayer().getId());
+            }
+        }
+        return playerSeatMap;
+    }
+
     public Map<Seat, PlayerContext> getPlayerContexts() {
         return playerContexts;
+    }
+
+    public int getNumEmptySeats() {
+        int count = 4;
+        for (PlayerContext ctx : playerContexts.values()) {
+            if (ctx != null) count--;
+        }
+        return count;
     }
 
     public Game getCurrentGame() {

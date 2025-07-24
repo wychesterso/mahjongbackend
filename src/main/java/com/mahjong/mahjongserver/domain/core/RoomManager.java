@@ -10,11 +10,12 @@ import com.mahjong.mahjongserver.domain.player.decision.BotDecisionHandler;
 import com.mahjong.mahjongserver.domain.player.decision.RealPlayerDecisionHandler;
 import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
+import com.mahjong.mahjongserver.dto.mapper.DTOMapper;
+import com.mahjong.mahjongserver.dto.state.RoomInfoDTO;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -102,6 +103,28 @@ public class RoomManager {
                 removeRoom(roomId);
             }
         }
+    }
+
+    public List<Map<String, Object>> getAllRoomsInfo() {
+        List<Map<String, Object>> roomList = new ArrayList<>();
+
+        for (Map.Entry<String, Room> entry : rooms.entrySet()) {
+            Room room = entry.getValue();
+            Map<String, Object> roomInfo = new HashMap<>();
+            roomInfo.put("roomId", entry.getKey());
+            roomInfo.put("host", room.getHostId());
+            roomInfo.put("availableSeats", room.getNumEmptySeats());
+            roomInfo.put("playerNames", room.getPlayerNames());
+            roomList.add(roomInfo);
+        }
+
+        return roomList;
+    }
+
+    public RoomInfoDTO getRoomInfo(String roomId) {
+        Room room = rooms.get(roomId);
+        if (room == null) return null;
+        return DTOMapper.fromRoom(room);
     }
 
     /**
