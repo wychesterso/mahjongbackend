@@ -42,6 +42,7 @@ public class RoomManager {
         }
         Room room = new Room(eventPublisher, roomId, scoreCalculator, host);
         rooms.put(roomId, room);
+        joinRoom(roomId, Seat.EAST, host);
         return room;
     }
 

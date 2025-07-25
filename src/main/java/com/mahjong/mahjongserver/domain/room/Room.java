@@ -151,7 +151,13 @@ public class Room {
 
     public boolean containsPlayer(String playerId) {
         for (Seat seat : Seat.values()) {
-            if (getPlayerContext(seat).getPlayer().getId().equals(playerId)) return true;
+            PlayerContext context = getPlayerContext(seat);
+            if (context != null) {
+                Player player = context.getPlayer();
+                if (player != null && player.getId().equals(playerId)) {
+                    return true;
+                }
+            }
         }
         return false;
     }
