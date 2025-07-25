@@ -27,6 +27,8 @@ public class RoomManager {
     private final Map<String, Room> rooms = new ConcurrentHashMap<>();
     private final GameEventPublisher eventPublisher;
 
+    private final Map<String, String> userToRoom = new HashMap<>();
+
     public RoomManager(GameEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
     }
@@ -37,6 +39,9 @@ public class RoomManager {
      * @return the created Room instance.
      */
     public Room createRoom(String roomId, ScoreCalculator scoreCalculator, Player host) {
+        if (userToRoom.containsKey(host.getId())) {
+            throw new IllegalStateException("Player already in another room!");
+        }
         if (rooms.containsKey(roomId)) {
             throw new IllegalArgumentException("Room already exists: " + roomId);
         }
@@ -65,13 +70,18 @@ public class RoomManager {
     }
 
     public void joinRoom(String roomId, Seat seat, Player realPlayer) {
+        if (userToRoom.containsKey(realPlayer.getId())) {
+            throw new IllegalStateException("Player already in another room!");
+        }
+
         Room room = getRoom(roomId);
 
         if (room.containsPlayer(realPlayer.getId())) {
-            throw new IllegalStateException("Player already in room!");
+            throw new IllegalStateException("Player already in this room!");
         }
 
         room.addPlayer(seat, realPlayer, new RealPlayerDecisionHandler(eventPublisher));
+        userToRoom.put(realPlayer.getId(), roomId);
     }
 
     public void exitRoom(String roomId, Player realPlayer) {
@@ -80,6 +90,8 @@ public class RoomManager {
         if (!room.containsPlayer(realPlayer.getId())) {
             throw new IllegalStateException("Player not in room!");
         }
+
+        userToRoom.remove(realPlayer.getId());
 
         boolean wasHost = room.getHost().getId().equals(realPlayer.getId());
         Seat seat = room.getSeat(realPlayer);
