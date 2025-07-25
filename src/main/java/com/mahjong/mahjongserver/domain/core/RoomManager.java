@@ -96,7 +96,7 @@ public class RoomManager {
         boolean wasHost = room.getHost().getId().equals(realPlayer.getId());
         Seat seat = room.getSeat(realPlayer);
         room.removePlayer(realPlayer);
-        if (room.getCurrentGame().isActiveGame()) {
+        if (room.getCurrentGame() != null && room.getCurrentGame().isActiveGame()) {
             Bot bot = new Bot(generateNextBotId(room));
             room.addPlayer(seat, bot, new BotDecisionHandler());
         }
@@ -104,7 +104,9 @@ public class RoomManager {
         if (wasHost) {
             // find next real player and assign them as host
             Optional<RealPlayer> nextReal = room.getPlayerContexts().values().stream()
+                    .filter(Objects::nonNull)
                     .map(PlayerContext::getPlayer)
+                    .filter(Objects::nonNull)
                     .filter(p -> p instanceof RealPlayer)
                     .map(p -> (RealPlayer) p)
                     .findFirst();

@@ -142,7 +142,7 @@ public class Room {
     public void removePlayer(Player player) {
         for (Seat seat : Seat.values()) {
             PlayerContext ctx = playerContexts.get(seat);
-            if (ctx != null && ctx.getPlayer().equals(player)) {
+            if (ctx != null && ctx.getPlayer().getId().equals(player.getId())) {
                 removePlayer(seat);
                 return;
             }
