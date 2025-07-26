@@ -2,14 +2,11 @@ package com.mahjong.mahjongserver.api.controller;
 
 import com.mahjong.mahjongserver.domain.core.RoomManager;
 import com.mahjong.mahjongserver.domain.game.score.TaiwaneseSixteenScoreCalculator;
-import com.mahjong.mahjongserver.domain.player.Player;
-import com.mahjong.mahjongserver.domain.player.RealPlayer;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,14 +36,10 @@ public class RoomController {
     @PostMapping("/create")
     public ResponseEntity<Map<String, String>> createRoom(Principal principal) {
         String playerId = principal.getName();
-        Player host = new RealPlayer(playerId);
-
         String roomId = UUID.randomUUID().toString().substring(0, 8);
-        roomManager.createRoom(roomId, new TaiwaneseSixteenScoreCalculator(), host);
+        roomManager.createRoom(roomId, new TaiwaneseSixteenScoreCalculator(), playerId);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("roomId", roomId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(Map.of("roomId", roomId));
     }
 
     /**
@@ -58,9 +51,20 @@ public class RoomController {
             @RequestParam Seat seat,
             Principal principal) {
         String playerId = principal.getName();
+        roomManager.joinRoom(roomId, seat, playerId);
+        return ResponseEntity.ok().build();
+    }
 
-        Player player = new RealPlayer(playerId);
-        roomManager.joinRoom(roomId, seat, player);
+    /**
+     * Switch a player's seat.
+     */
+    @PostMapping("/{roomId}/seat")
+    public ResponseEntity<?> switchSeat(
+            @PathVariable String roomId,
+            @RequestParam Seat newSeat,
+            Principal principal) {
+        String playerId = principal.getName();
+        roomManager.switchSeat(roomId, newSeat, playerId);
         return ResponseEntity.ok().build();
     }
 
@@ -86,9 +90,7 @@ public class RoomController {
             @PathVariable String roomId,
             Principal principal) {
         String playerId = principal.getName();
-
-        Player player = new RealPlayer(playerId);
-        roomManager.exitRoom(roomId, player);
+        roomManager.exitRoom(roomId, playerId);
         return ResponseEntity.ok().build();
     }
 }

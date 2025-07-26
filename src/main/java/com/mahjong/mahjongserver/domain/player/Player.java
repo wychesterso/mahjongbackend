@@ -9,6 +9,11 @@ public abstract class Player {
         this.score = 1000;
     }
 
+    public Player(String id, int score) {
+        this.id = id;
+        this.score = score;
+    }
+
 //============================== GETTERS AND SETTERS ==============================//
 
     public String getId() {
