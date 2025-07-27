@@ -132,7 +132,9 @@ public class Room {
         Map<Seat, Boolean> botMap = new HashMap<>();
         for (Map.Entry<Seat, PlayerContext> entry : playerContexts.entrySet()) {
             PlayerContext ctx = entry.getValue();
-            if (ctx != null) {
+            if (ctx == null) {
+                botMap.put(entry.getKey(), false);
+            } else {
                 botMap.put(entry.getKey(), ctx.getPlayer().isBot());
             }
         }
@@ -259,7 +261,7 @@ public class Room {
      */
     public boolean removeBot(Seat seat) {
         Player player = playerContexts.get(seat).getPlayer();
-        if (currentGame.isActiveGame() || player == null || !player.isBot()) return false;
+        if ((currentGame != null && currentGame.isActiveGame()) || player == null || !player.isBot()) return false;
         removePlayer(seat);
         return true;
     }
