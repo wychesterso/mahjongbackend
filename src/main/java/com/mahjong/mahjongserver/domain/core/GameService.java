@@ -5,8 +5,10 @@ import com.mahjong.mahjongserver.domain.player.decision.Decision;
 import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
+import com.mahjong.mahjongserver.dto.mapper.DTOMapper;
 import com.mahjong.mahjongserver.dto.response.DiscardResponseDTO;
 import com.mahjong.mahjongserver.domain.player.decision.EndGameDecision;
+import com.mahjong.mahjongserver.dto.state.GameStateDTO;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -42,6 +44,30 @@ public class GameService {
         } else {
             throw new IllegalStateException("Not all seats are filled!");
         }
+    }
+
+    public GameStateDTO getGameState(String roomId, String playerId) {
+        Room room = roomManager.getRoom(roomId);
+
+        if (room.getCurrentGame() == null || !room.getCurrentGame().isActiveGame()) {
+            throw new IllegalStateException("No active game in this room.");
+        }
+
+        // Determine the requesting seat
+        Seat selfSeat = null;
+        for (Seat seat : Seat.values()) {
+            Player player = room.getPlayerContext(seat).getPlayer();
+            if (player != null && player.getId().equals(playerId)) {
+                selfSeat = seat;
+                break;
+            }
+        }
+
+        if (selfSeat == null) {
+            throw new AccessDeniedException("You are not a player in this room.");
+        }
+
+        return DTOMapper.fromGame(room.getCurrentGame(), selfSeat);
     }
 
     /**

@@ -1,6 +1,9 @@
 package com.mahjong.mahjongserver.dto.mapper;
 
+import com.mahjong.mahjongserver.domain.game.Game;
+import com.mahjong.mahjongserver.domain.game.claim.ClaimOption;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
+import com.mahjong.mahjongserver.domain.player.decision.Decision;
 import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.Table;
@@ -78,7 +81,54 @@ public class DTOMapper {
                 room.getRoomId(),
                 room.getHostId(),
                 room.getNumEmptySeats(),
-                room.getPlayerNames()
+                room.getPlayerNames(),
+                room.getBotStatuses()
+        );
+    }
+
+    public static GameStateDTO fromGame(Game game, Seat seat) {
+        TableDTO tableDTO = fromTable(game.getTable(), seat);
+
+        // Determine if the player has a drawn tile
+        Tile drawnTile = null;
+        if (game.getCurrentSeat() == seat) {
+            drawnTile = game.getTable().getHand(seat).getLastDrawnTile();
+        }
+
+        // Only show decisions for current player if there are expected claims for them
+        List<Decision> availableDecisions = null;
+        if (game.getCurrentSeat() == seat && game.getExpectedClaims().containsKey(seat)) {
+            availableDecisions = game.getExpectedClaims().get(seat).stream()
+                    .map(ClaimOption::getDecision)
+                    .distinct()
+                    .toList();
+        }
+
+        // Map expected claimants: Map<Seat, List<Decision>>
+        Map<Seat, List<Decision>> expectedClaimants = new EnumMap<>(Seat.class);
+        for (Map.Entry<Seat, List<ClaimOption>> entry : game.getExpectedClaims().entrySet()) {
+            expectedClaimants.put(
+                    entry.getKey(),
+                    entry.getValue().stream()
+                            .map(ClaimOption::getDecision)
+                            .distinct()
+                            .toList()
+            );
+        }
+
+        return new GameStateDTO(
+                tableDTO,
+                game.getCurrentSeat(),
+                game.getWindSeat(),
+                game.getZhongSeat(),
+                expectedClaimants,
+                game.getBoard().getLastDiscardedTile(),
+                game.getCurrentSeat(),
+                availableDecisions,
+                drawnTile,
+                game.isActiveGame(),
+                game.getWinnerSeats(),
+                game.getNumDraws()
         );
     }
 }

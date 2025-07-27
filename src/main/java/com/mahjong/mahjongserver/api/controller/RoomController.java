@@ -83,6 +83,20 @@ public class RoomController {
     }
 
     /**
+     * Remove a bot from a seat in the specified room.
+     */
+    @PostMapping("/{roomId}/remove-bot")
+    public ResponseEntity<Void> removeBot(
+            @PathVariable String roomId,
+            @RequestParam Seat seat,
+            Principal principal) {
+        String playerId = principal.getName();
+
+        roomManager.removeBotFromSeat(roomId, seat, playerId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * Exit a room as a real player.
      */
     @PostMapping("/{roomId}/exit")

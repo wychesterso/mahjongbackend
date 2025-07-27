@@ -175,7 +175,9 @@ public class RoomManager {
         if (!room.getHostId().equals(requesterId)) {
             throw new AccessDeniedException("Only host can add bots!");
         }
-        room.addBot(seat);
+        if (!room.addBot(seat)) {
+            throw new IllegalStateException("Bot could not be added!");
+        }
     }
 
     /**
@@ -190,6 +192,24 @@ public class RoomManager {
             String candidateId = "bot" + index;
             if (!room.containsPlayer(candidateId)) return candidateId;
             index++;
+        }
+    }
+
+    /**
+     * Removes a bot from a given seat in the room.
+     *
+     * @param roomId      The target room.
+     * @param seat        The seat to remove the bot from.
+     * @param requesterId The ID of the host making the request.
+     * @throws AccessDeniedException If the requester is not the host.
+     */
+    public void removeBotFromSeat(String roomId, Seat seat, String requesterId) {
+        Room room = getRoom(roomId);
+        if (!room.getHostId().equals(requesterId)) {
+            throw new AccessDeniedException("Only host can remove bots!");
+        }
+        if (!room.removeBot(seat)) {
+            throw new IllegalStateException("Bot could not be removed!");
         }
     }
 

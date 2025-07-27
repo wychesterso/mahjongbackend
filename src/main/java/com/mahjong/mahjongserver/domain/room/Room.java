@@ -127,6 +127,18 @@ public class Room {
         return playerSeatMap;
     }
 
+    /** @return A map of seat positions to whether each player is a bot. */
+    public Map<Seat, Boolean> getBotStatuses() {
+        Map<Seat, Boolean> botMap = new HashMap<>();
+        for (Map.Entry<Seat, PlayerContext> entry : playerContexts.entrySet()) {
+            PlayerContext ctx = entry.getValue();
+            if (ctx != null) {
+                botMap.put(entry.getKey(), ctx.getPlayer().isBot());
+            }
+        }
+        return botMap;
+    }
+
     /**
      * Checks if a player with the given ID is in the room.
      *
@@ -237,6 +249,19 @@ public class Room {
     public boolean addBot(Seat seat) {
         Bot bot = new Bot(generateNextBotId());
         return addPlayer(seat, bot, new BotDecisionHandler());
+    }
+
+    /**
+     * Removes a bot from the given seat.
+     *
+     * @param seat The seat to remove bot from.
+     * @return True if successfully removed.
+     */
+    public boolean removeBot(Seat seat) {
+        Player player = playerContexts.get(seat).getPlayer();
+        if (currentGame.isActiveGame() || player == null || !player.isBot()) return false;
+        removePlayer(seat);
+        return true;
     }
 
     /**

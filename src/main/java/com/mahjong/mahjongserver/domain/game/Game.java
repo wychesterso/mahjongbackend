@@ -85,7 +85,15 @@ public class Game {
         return winnerSeats;
     }
 
-//============================== EVENTS ==============================//
+    public Map<Seat, List<ClaimOption>> getExpectedClaims() {
+        return expectedClaims;
+    }
+
+    public int getNumDraws() {
+        return numDraws;
+    }
+
+    //============================== EVENTS ==============================//
 
     public void startGame() {
         activeGame = true;

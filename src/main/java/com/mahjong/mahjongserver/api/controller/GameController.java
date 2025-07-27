@@ -2,15 +2,19 @@ package com.mahjong.mahjongserver.api.controller;
 
 import com.mahjong.mahjongserver.domain.core.GameService;
 import com.mahjong.mahjongserver.dto.response.*;
+import com.mahjong.mahjongserver.dto.state.GameStateDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.security.Principal;
 
 @Controller
+@RequestMapping("/room/{roomId}")
 public class GameController {
 
     private final GameService gameService;
@@ -25,7 +29,7 @@ public class GameController {
      * @param principal the authenticated player info.
      * @return
      */
-    @PostMapping("/rooms/{roomId}/start")
+    @PostMapping("/start")
     public ResponseEntity<Void> startGame(
             @PathVariable String roomId,
             Principal principal) {
@@ -33,6 +37,13 @@ public class GameController {
 
         gameService.startGame(roomId, playerId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/game")
+    public ResponseEntity<GameStateDTO> getGameState(@PathVariable String roomId, Principal principal) {
+        String playerId = principal.getName();
+        GameStateDTO gameState = gameService.getGameState(roomId, playerId);
+        return ResponseEntity.ok(gameState);
     }
 
     /**
