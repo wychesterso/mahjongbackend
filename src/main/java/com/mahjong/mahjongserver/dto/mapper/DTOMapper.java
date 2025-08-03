@@ -89,13 +89,13 @@ public class DTOMapper {
     public static GameStateDTO fromGame(Game game, Seat seat) {
         TableDTO tableDTO = fromTable(game.getTable(), seat);
 
-        // Determine if the player has a drawn tile
+        // determine if the player has a drawn tile
         Tile drawnTile = null;
         if (game.getCurrentSeat() == seat) {
             drawnTile = game.getTable().getHand(seat).getLastDrawnTile();
         }
 
-        // Only show decisions for current player if there are expected claims for them
+        // only show decisions for current player if there are expected claims for them
         List<Decision> availableDecisions = null;
         if (game.getCurrentSeat() == seat && game.getExpectedClaims().containsKey(seat)) {
             availableDecisions = game.getExpectedClaims().get(seat).stream()
@@ -104,7 +104,7 @@ public class DTOMapper {
                     .toList();
         }
 
-        // Map expected claimants: Map<Seat, List<Decision>>
+        // map expected claimants: Map<Seat, List<Decision>>
         Map<Seat, List<Decision>> expectedClaimants = new EnumMap<>(Seat.class);
         for (Map.Entry<Seat, List<ClaimOption>> entry : game.getExpectedClaims().entrySet()) {
             expectedClaimants.put(
@@ -121,6 +121,7 @@ public class DTOMapper {
                 game.getCurrentSeat(),
                 game.getWindSeat(),
                 game.getZhongSeat(),
+                game.getRoom().getPlayerNames(),
                 expectedClaimants,
                 game.getBoard().getLastDiscardedTile(),
                 game.getCurrentSeat(),

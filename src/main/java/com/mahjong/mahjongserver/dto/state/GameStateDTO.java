@@ -12,6 +12,7 @@ public record GameStateDTO(
         Seat currentTurn,
         Seat windSeat,
         Seat zhongSeat,
+        Map<Seat, String> playerNames,
         Map<Seat, List<Decision>> expectedClaimants,
         Tile lastDiscardedTile,
         Seat lastDiscarder,

@@ -75,6 +75,7 @@ public class Board {
     }
 
     public Tile getLastDiscardedTile() {
+        if (!canTakeDiscard) return null;
         return discardPile.peek();
     }
 

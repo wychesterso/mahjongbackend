@@ -5,6 +5,8 @@ import com.mahjong.mahjongserver.domain.game.score.ScoreCalculator;
 import com.mahjong.mahjongserver.domain.player.PlayerProfile;
 import com.mahjong.mahjongserver.domain.player.RealPlayer;
 import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
+import com.mahjong.mahjongserver.domain.player.decision.BotDecisionHandler;
+import com.mahjong.mahjongserver.domain.player.decision.BotDecisionHandlerFactory;
 import com.mahjong.mahjongserver.domain.player.decision.RealPlayerDecisionHandler;
 import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
@@ -26,6 +28,7 @@ public class RoomManager {
     private final Map<String, Room> rooms = new ConcurrentHashMap<>();
     private final GameEventPublisher eventPublisher;
     private final PlayerProfileService playerProfileService;
+    private final BotDecisionHandlerFactory botFactory;
 
     private final Map<String, String> userToRoom = new HashMap<>();
 
@@ -35,9 +38,12 @@ public class RoomManager {
      * @param eventPublisher       The publisher for game events.
      * @param playerProfileService The service for player profiles.
      */
-    public RoomManager(GameEventPublisher eventPublisher, PlayerProfileService playerProfileService) {
+    public RoomManager(GameEventPublisher eventPublisher,
+                       PlayerProfileService playerProfileService,
+                       BotDecisionHandlerFactory botFactory) {
         this.eventPublisher = eventPublisher;
         this.playerProfileService = playerProfileService;
+        this.botFactory = botFactory;
     }
 
 //============================== ROOM LIFECYCLE MANAGEMENT ==============================//
@@ -122,10 +128,10 @@ public class RoomManager {
 
         boolean wasHost = room.getHost().getId().equals(playerId);
         Seat seat = room.getSeat(playerId);
-        room.removePlayer(playerId);
+        room.removePlayer(playerId, botFactory.createBotDecisionHandler());
 
         if (room.getCurrentGame() != null && room.getCurrentGame().isActiveGame()) {
-            room.addBot(seat);
+            room.addBot(seat, botFactory.createBotDecisionHandler());
         }
 
         if (wasHost) {
@@ -208,7 +214,7 @@ public class RoomManager {
         if (!room.getHostId().equals(requesterId)) {
             throw new AccessDeniedException("Only host can remove bots!");
         }
-        if (!room.removeBot(seat)) {
+        if (!room.removeBot(seat, botFactory.createBotDecisionHandler())) {
             throw new IllegalStateException("Bot could not be removed!");
         }
     }

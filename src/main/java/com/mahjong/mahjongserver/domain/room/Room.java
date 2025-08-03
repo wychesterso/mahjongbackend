@@ -224,7 +224,7 @@ public class Room {
      */
     public boolean addPlayer(Seat seat, Player player, PlayerDecisionHandler decisionHandler) {
         if (playerContexts.get(seat) == null) {
-            playerContexts.put(seat, new PlayerContext(player, decisionHandler));
+            playerContexts.put(seat, new PlayerContext(player, decisionHandler, roomId));
             return true;
         } else {
             return false;
@@ -234,23 +234,25 @@ public class Room {
     /**
      * Adds a player to the given seat.
      *
-     * @param seat               The seat to assign.
-     * @param profile            The profile of the player to add.
+     * @param seat                  The seat to assign.
+     * @param profile               The profile of the player to add.
+     * @param playerDecisionHandler The player's decision handler.
      * @return True if successfully added.
      */
-    public boolean addPlayer(Seat seat, PlayerProfile profile) {
-        return addPlayer(seat, new RealPlayer(profile), new RealPlayerDecisionHandler(gameEventPublisher));
+    public boolean addPlayer(Seat seat, PlayerProfile profile, PlayerDecisionHandler playerDecisionHandler) {
+        return addPlayer(seat, new RealPlayer(profile), playerDecisionHandler);
     }
 
     /**
      * Adds a bot to the given seat.
      *
      * @param seat The seat to assign.
+     * @param botDecisionHandler The bot's decision handler.
      * @return True if successfully added.
      */
-    public boolean addBot(Seat seat) {
+    public boolean addBot(Seat seat, BotDecisionHandler botDecisionHandler) {
         Bot bot = new Bot(generateNextBotId());
-        return addPlayer(seat, bot, new BotDecisionHandler());
+        return addPlayer(seat, bot, botDecisionHandler);
     }
 
     /**
@@ -259,10 +261,10 @@ public class Room {
      * @param seat The seat to remove bot from.
      * @return True if successfully removed.
      */
-    public boolean removeBot(Seat seat) {
+    public boolean removeBot(Seat seat, BotDecisionHandler botDecisionHandler) {
         Player player = playerContexts.get(seat).getPlayer();
         if ((currentGame != null && currentGame.isActiveGame()) || player == null || !player.isBot()) return false;
-        removePlayer(seat);
+        removePlayer(seat, botDecisionHandler);
         return true;
     }
 
@@ -313,11 +315,11 @@ public class Room {
      *
      * @param seat The seat to clear.
      */
-    public void removePlayer(Seat seat) {
+    public void removePlayer(Seat seat, BotDecisionHandler botDecisionHandler) {
         playerContexts.put(seat, null);
         if (currentGame != null && currentGame.isActiveGame()) {
             // replace with bot
-            addBot(seat);
+            addBot(seat, botDecisionHandler);
         }
     }
 
@@ -326,11 +328,11 @@ public class Room {
      *
      * @param playerId The ID of the player to remove.
      */
-    public void removePlayer(String playerId) {
+    public void removePlayer(String playerId, BotDecisionHandler botDecisionHandler) {
         for (Seat seat : Seat.values()) {
             PlayerContext ctx = playerContexts.get(seat);
             if (ctx != null && ctx.getPlayer().getId().equals(playerId)) {
-                removePlayer(seat);
+                removePlayer(seat, botDecisionHandler);
                 return;
             }
         }

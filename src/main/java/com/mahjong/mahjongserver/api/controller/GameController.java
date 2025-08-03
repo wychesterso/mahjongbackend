@@ -58,14 +58,14 @@ public class GameController {
         gameService.handleDiscardResponse(roomId, playerId, response);
     }
 
-    @MessageMapping("/game/respondDrawClaim")
+    @MessageMapping("/game/respondDrawDecision")
     public void handleDrawDecision(DecisionResponseDTO response, Principal principal) {
         String playerId = principal.getName();
         gameService.handleDrawClaim(response.getRoomId(), playerId, response.getDecision());
     }
 
-    @MessageMapping("/game/respondDiscardClaim")
-    public void handleClaimDecision(ClaimResponseDTO response, Principal principal) {
+    @MessageMapping("/game/respondDiscardDecision")
+    public void handleDiscardDecision(ClaimResponseDTO response, Principal principal) {
         String playerId = principal.getName();
         gameService.handleDiscardClaim(response.getRoomId(), playerId, response.getDecision(), response.getSheungCombo());
     }

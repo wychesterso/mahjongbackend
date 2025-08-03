@@ -60,12 +60,12 @@ public class GameEventPublisher {
     /**
      * Send the current game state to a specified player.
      * @param playerId the id of the specified player.
-     * @param tableDTO the latest representation of the game table.
+     * @param gameStateDTO the latest representation of the game state.
      */
-    public void sendTableUpdate(String playerId, Object tableDTO) {
+    public void sendTableUpdate(String playerId, Object gameStateDTO) {
         sendToPlayer(playerId, Map.of(
                 "type", "update",
-                "data", tableDTO
+                "data", gameStateDTO
         ));
     }
 

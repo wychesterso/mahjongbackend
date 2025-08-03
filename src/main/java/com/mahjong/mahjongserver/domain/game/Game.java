@@ -57,6 +57,10 @@ public class Game {
 
 //============================== GETTERS ==============================//
 
+    public Room getRoom() {
+        return room;
+    }
+
     public boolean isActiveGame() {
         return activeGame;
     }
@@ -241,10 +245,10 @@ public class Game {
         if (!claimOptions.isEmpty()) {
             expectedClaims.put(currentSeat, claimOptions);
 
-            promptDecision(drawnTile, null, currentSeat, claimOptions.stream()
+            promptDrawDecision(drawnTile, currentSeat, claimOptions.stream()
                     .map(ClaimOption::getDecision)
                     .distinct()
-                    .toList(), null);
+                    .toList());
 
             room.getTimeoutScheduler().schedule(
                     "claim:" + getPlayerContext().getPlayer().getId(),
@@ -278,7 +282,7 @@ public class Game {
                     .map(ClaimOption::getValidCombos)
                     .orElse(null);
 
-            promptDecision(discardedTile, discarder, claimant, options, sheungCombos);
+            promptDiscardDecision(discardedTile, discarder, claimant, options, sheungCombos);
 
             // start timeout to auto-pass if no response
             room.getTimeoutScheduler().schedule(
@@ -289,10 +293,20 @@ public class Game {
         }
     }
 
-    private void promptDecision(Tile discardedTile, Seat discarder, Seat claimee,
-                                List<Decision> availableOptions, List<List<Tile>> sheungCombos) {
+    private void promptDrawDecision(Tile drawnTile, Seat claimee, List<Decision> availableOptions) {
         PlayerContext ctx = room.getPlayerContext(claimee);
-        ctx.getDecisionHandler().promptDecision(
+        ctx.getDecisionHandler().promptDecisionOnDraw(
+                ctx,
+                DTOMapper.fromTable(table, claimee),
+                drawnTile,
+                availableOptions
+        );
+    }
+
+    private void promptDiscardDecision(Tile discardedTile, Seat discarder, Seat claimee,
+                                       List<Decision> availableOptions, List<List<Tile>> sheungCombos) {
+        PlayerContext ctx = room.getPlayerContext(claimee);
+        ctx.getDecisionHandler().promptDecisionOnDiscard(
                 ctx,
                 DTOMapper.fromTable(table, claimee),
                 discardedTile,
@@ -329,7 +343,7 @@ public class Game {
             PlayerContext ctx = room.getPlayerContext(seat);
             room.getGameEventPublisher().sendTableUpdate(
                     ctx.getPlayer().getId(),
-                    DTOMapper.fromTable(table, seat)
+                    DTOMapper.fromGame(this, seat)
             );
         }
     }

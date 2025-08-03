@@ -21,11 +21,24 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
     }
 
     @Override
-    public void promptDecision(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder,
-                               List<Decision> availableOptions, List<List<Tile>> sheungCombos) {
+    public void promptDecisionOnDraw(PlayerContext ctx, TableDTO table, Tile drawnTile, List<Decision> availableOptions) {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
-                "prompt_operation_choice",
+                "prompt_draw_decision",
+                Map.of(
+                        "table", table,
+                        "drawn_tile", drawnTile,
+                        "available_options", availableOptions
+                )
+        );
+    }
+
+    @Override
+    public void promptDecisionOnDiscard(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder,
+                                      List<Decision> availableOptions, List<List<Tile>> sheungCombos) {
+        publisher.sendPrompt(
+                ctx.getPlayer().getId(),
+                "prompt_discard_decision",
                 Map.of(
                         "table", table,
                         "discarded_tile", discardedTile,
