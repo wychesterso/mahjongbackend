@@ -181,7 +181,7 @@ public class RoomManager {
         if (!room.getHostId().equals(requesterId)) {
             throw new AccessDeniedException("Only host can add bots!");
         }
-        if (!room.addBot(seat)) {
+        if (!room.addBot(seat, botFactory.createBotDecisionHandler())) {
             throw new IllegalStateException("Bot could not be added!");
         }
     }
