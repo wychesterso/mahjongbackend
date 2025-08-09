@@ -2,15 +2,16 @@ package com.mahjong.mahjongserver.domain.player.decision;
 
 import com.mahjong.mahjongserver.domain.core.GameService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 @Component
 public class BotDecisionHandlerFactory {
 
-    private final GameService gameService;
+    private GameService gameService;
 
     @Autowired
-    public BotDecisionHandlerFactory(GameService gameService) {
+    public void setGameService(@Lazy GameService gameService) {
         this.gameService = gameService;
     }
 
