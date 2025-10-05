@@ -87,6 +87,40 @@ public class RoomManager {
 //============================== ROOM PARTICIPATION ==============================//
 
     /**
+     * Allows a player to join a random seat in a room.
+     *
+     * @param roomId   The ID of the room to join.
+     * @param playerId The ID of the joining player.
+     * @throws IllegalStateException If the player is already in a room or already in this room.
+     */
+    public void joinRoom(String roomId, String playerId) {
+        Room room = getRoom(roomId);
+
+        if (room.containsPlayer(playerId)) {
+            throw new IllegalStateException("Player already in this room!");
+        }
+        if (userToRoom.containsKey(playerId)) {
+            throw new IllegalStateException("Player already in another room!");
+        }
+
+        PlayerProfile profile = playerProfileService.loadProfile(playerId);
+        boolean found = false;
+        for (Seat seat : Seat.values()) {
+            if (room.isVacant(seat)) {
+                room.addPlayer(seat, new RealPlayer(profile), new RealPlayerDecisionHandler(eventPublisher));
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            throw new IllegalStateException("Room full!");
+        }
+
+        userToRoom.put(playerId, roomId);
+    }
+
+    /**
      * Allows a player to join a specific seat in a room.
      *
      * @param roomId   The ID of the room to join.
@@ -95,14 +129,13 @@ public class RoomManager {
      * @throws IllegalStateException If the player is already in a room or already in this room.
      */
     public void joinRoom(String roomId, Seat seat, String playerId) {
-        if (userToRoom.containsKey(playerId)) {
-            throw new IllegalStateException("Player already in another room!");
-        }
-
         Room room = getRoom(roomId);
 
         if (room.containsPlayer(playerId)) {
             throw new IllegalStateException("Player already in this room!");
+        }
+        if (userToRoom.containsKey(playerId)) {
+            throw new IllegalStateException("Player already in another room!");
         }
 
         PlayerProfile profile = playerProfileService.loadProfile(playerId);

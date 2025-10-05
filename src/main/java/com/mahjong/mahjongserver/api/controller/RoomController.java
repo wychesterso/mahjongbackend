@@ -43,15 +43,19 @@ public class RoomController {
     }
 
     /**
-     * Join a room as a real player to a specific seat.
+     * Join a room as a real player.
      */
     @PostMapping("/{roomId}/join")
     public ResponseEntity<Void> joinRoom(
             @PathVariable String roomId,
-            @RequestParam Seat seat,
+            @RequestParam(required = false) Seat seat,
             Principal principal) {
         String playerId = principal.getName();
-        roomManager.joinRoom(roomId, seat, playerId);
+        if (seat != null) {
+            roomManager.joinRoom(roomId, seat, playerId);
+        } else {
+            roomManager.joinRoom(roomId, playerId);
+        }
         return ResponseEntity.ok().build();
     }
 
