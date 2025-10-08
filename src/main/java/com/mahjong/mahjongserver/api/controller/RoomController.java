@@ -42,6 +42,16 @@ public class RoomController {
         return ResponseEntity.ok(Map.of("roomId", roomId));
     }
 
+    @GetMapping("/current-room")
+    public ResponseEntity<String> getCurrentRoom(Principal principal) {
+        String playerId = principal.getName();
+        String roomId = roomManager.getRoomIdForPlayer(playerId);
+        if (roomId == null) {
+            return ResponseEntity.noContent().build(); // 204
+        }
+        return ResponseEntity.ok(roomId);
+    }
+
     /**
      * Join a room as a real player.
      */

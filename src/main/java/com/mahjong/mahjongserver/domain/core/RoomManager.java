@@ -87,6 +87,16 @@ public class RoomManager {
 //============================== ROOM PARTICIPATION ==============================//
 
     /**
+     * Retrieves the room id that a given player is currently seated in, or null if it doesn't exist.
+     *
+     * @param playerId the id of the player to query.
+     * @return the room id, or null if player is not in any room.
+     */
+    public String getRoomIdForPlayer(String playerId) {
+        return userToRoom.get(playerId);
+    }
+
+    /**
      * Allows a player to join a random seat in a room.
      *
      * @param roomId   The ID of the room to join.
