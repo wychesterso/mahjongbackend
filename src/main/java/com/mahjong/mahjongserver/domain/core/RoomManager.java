@@ -2,6 +2,7 @@ package com.mahjong.mahjongserver.domain.core;
 
 import com.mahjong.mahjongserver.config.exception.RoomNotFoundException;
 import com.mahjong.mahjongserver.domain.game.score.ScoreCalculator;
+import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.PlayerProfile;
 import com.mahjong.mahjongserver.domain.player.RealPlayer;
 import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
@@ -276,6 +277,26 @@ public class RoomManager {
         if (!room.removeBot(seat, botFactory.createBotDecisionHandler())) {
             throw new IllegalStateException("Bot could not be removed!");
         }
+    }
+
+    /**
+     * Transfer host to another real player.
+     *
+     * @param roomId      The target room.
+     * @param seat        The seat to transfer host to.
+     * @param requesterId The ID of the host making the request.
+     * @throws AccessDeniedException If the requester is not the host.
+     */
+    public void transferHost(String roomId, Seat seat, String requesterId) {
+        Room room = getRoom(roomId);
+        if (!room.getHostId().equals(requesterId)) {
+            throw new AccessDeniedException("Only host can remove bots!");
+        }
+        Player player = room.getPlayerContext(seat).getPlayer();
+        if (player.isBot()) {
+            throw new IllegalStateException("Cannot make bot the host!");
+        }
+        room.setHost(room.getPlayerContext(seat).getPlayer());
     }
 
 //============================== ROOM ACCESS AND QUERIES ==============================//

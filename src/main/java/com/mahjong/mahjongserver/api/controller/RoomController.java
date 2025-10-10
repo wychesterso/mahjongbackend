@@ -83,6 +83,20 @@ public class RoomController {
     }
 
     /**
+     * Transfer host to another real player.
+     */
+    @PostMapping("/{roomId}/transfer-host")
+    public ResponseEntity<Void> transferHost(
+            @PathVariable String roomId,
+            @RequestParam Seat seat,
+            Principal principal) {
+        String playerId = principal.getName();
+
+        roomManager.transferHost(roomId, seat, playerId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * Assign a bot to a seat in the specified room.
      */
     @PostMapping("/{roomId}/add-bot")
