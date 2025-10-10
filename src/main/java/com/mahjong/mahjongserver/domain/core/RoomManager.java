@@ -197,6 +197,22 @@ public class RoomManager {
     }
 
     /**
+     * Kicks a real player from a room.
+     *
+     * @param roomId      The target room.
+     * @param seat        The seat to kick.
+     * @param requesterId The ID of the host making the request.
+     * @throws AccessDeniedException If the requester is not the host.
+     */
+    public void kickFromRoom(String roomId, Seat seat, String requesterId) {
+        Room room = getRoom(roomId);
+        if (!room.getHostId().equals(requesterId)) {
+            throw new AccessDeniedException("Only host can kick players!");
+        }
+        exitRoom(roomId, room.getPlayerContext(seat).getPlayer().getId());
+    }
+
+    /**
      * Switches the player's seat in the given room.
      *
      * @param roomId   The room in which to switch seats.

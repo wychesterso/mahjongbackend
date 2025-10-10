@@ -111,6 +111,20 @@ public class RoomController {
     }
 
     /**
+     * Kick a real player from the room.
+     */
+    @PostMapping("/{roomId}/kick")
+    public ResponseEntity<Void> kickFromRoom(
+            @PathVariable String roomId,
+            @RequestParam Seat seat,
+            Principal principal) {
+        String playerId = principal.getName();
+
+        roomManager.kickFromRoom(roomId, seat, playerId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * Exit a room as a real player.
      */
     @PostMapping("/{roomId}/exit")
