@@ -17,6 +17,8 @@ import com.mahjong.mahjongserver.infrastructure.TimeoutScheduler;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Represents a game room in the Mahjong server.
@@ -274,13 +276,31 @@ public class Room {
      * @return A unique bot ID for the room.
      */
     private String generateNextBotId() {
-        int botNumber = (int) getPlayerContexts().values().stream()
+        // collect currently used bot numbers
+        Set<Integer> used = getPlayerContexts().values().stream()
                 .filter(Objects::nonNull)
                 .map(PlayerContext::getPlayer)
-                .filter(Objects::nonNull)
                 .filter(p -> p instanceof Bot)
-                .count();
-        return "bot-" + (botNumber + 1);
+                .map(p -> {
+                    try {
+                        String id = p.getId();
+                        return Integer.parseInt(id.replace("bot-", ""));
+                    } catch (Exception e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // find first available number from 1 to 3
+        for (int i = 1; i <= 3; i++) {
+            if (!used.contains(i)) {
+                return "bot-" + i;
+            }
+        }
+
+        // all slots are used
+        return null;
     }
 
     /**
