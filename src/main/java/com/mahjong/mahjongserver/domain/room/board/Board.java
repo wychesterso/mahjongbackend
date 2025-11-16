@@ -61,12 +61,12 @@ public class Board {
 
     public Tile drawTile() {
         if (!canDraw()) return null;
-        return drawPile.getFirst();
+        return drawPile.removeFirst();
     }
 
     public Tile drawBonusTile() {
         if (!canDraw()) return null;
-        return drawPile.getLast();
+        return drawPile.removeLast();
     }
 
     public void putInDiscardPile(Tile tile) {

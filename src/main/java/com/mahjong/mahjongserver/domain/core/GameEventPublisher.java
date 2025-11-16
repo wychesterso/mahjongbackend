@@ -15,10 +15,12 @@ public class GameEventPublisher {
     }
 
     public void sendToPlayer(String playerId, Object payload) {
+        System.out.println("[GameEventPublisher] sendToPlayer -> playerId=" + playerId + ", payloadType=" + (payload==null?"null":payload.getClass().getSimpleName()));
         messagingTemplate.convertAndSendToUser(playerId, "/queue/game", payload);
     }
 
     public void sendToAll(String roomId, Object payload) {
+        System.out.println("[GameEventPublisher] sendToAll -> roomId=" + roomId + ", payloadType=" + (payload==null?"null":payload.getClass().getSimpleName()));
         messagingTemplate.convertAndSend("/topic/room/" + roomId, payload);
     }
 
@@ -63,6 +65,18 @@ public class GameEventPublisher {
      * @param gameStateDTO the latest representation of the game state.
      */
     public void sendTableUpdate(String playerId, Object gameStateDTO) {
+        // attempt to log gameActive if possible
+        try {
+            if (gameStateDTO != null && gameStateDTO.getClass().getSimpleName().equals("GameStateDTO")) {
+                // reflectively try to read gameActive (record accessor)
+                Object active = gameStateDTO.getClass().getMethod("gameActive").invoke(gameStateDTO);
+                System.out.println("[GameEventPublisher] sendTableUpdate -> player=" + playerId + ", gameActive=" + active);
+            }
+        } catch (Exception e) {
+            // fallthrough
+            System.out.println("[GameEventPublisher] sendTableUpdate -> player=" + playerId + ", (could not read gameActive)");
+        }
+
         sendToPlayer(playerId, Map.of(
                 "type", "update",
                 "data", gameStateDTO

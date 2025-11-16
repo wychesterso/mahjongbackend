@@ -15,8 +15,8 @@ import java.util.*;
 
 public class DTOMapper {
     public static HandDTO fromHand(Hand hand, boolean isSelf) {
-        List<Tile> concealedTiles = isSelf ? hand.getConcealedTiles() : null;
-        List<List<Tile>> darkKongs = isSelf ? hand.getDarkKongs() : null;
+        List<Tile> concealedTiles = isSelf ? hand.getConcealedTiles() : List.of();
+        List<List<Tile>> darkKongs = isSelf ? hand.getDarkKongs() : List.of();
 
         return new HandDTO(
                 concealedTiles,

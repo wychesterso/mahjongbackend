@@ -383,11 +383,16 @@ public class Room {
     public boolean startGame() {
         // check that room is full
         for (Seat seat : Seat.values()) {
-            if (playerContexts.get(seat) == null) return false;
+            if (playerContexts.get(seat) == null) {
+                System.out.println("seat " + seat + " does not have player context");
+                return false;
+            }
         }
 
+        System.out.println("[Room] startGame(): announcing game_start for room=" + roomId);
         gameEventPublisher.sendGameStart(roomId);
         currentGame = new Game(this, windSeat, zhongSeat);
+        System.out.println("[Room] startGame(): created Game instance for room=" + roomId + ", currentGame=" + (currentGame==null?"null":"created"));
 
         return true;
     }

@@ -101,7 +101,9 @@ public class Game {
 
     public void startGame() {
         activeGame = true;
+        System.out.println("[Game] startGame(): activeGame set to true for room=" + room.getRoomId() + ", currentSeat=" + currentSeat);
         dealStartingHands();
+        System.out.println("[Game] startGame(): finished dealing hands for room=" + room.getRoomId());
         if (handleClaimsAfterDraw(table.getHand(currentSeat).getLastDrawnTile())) return;
         startTurnWithoutDraw();
     }
@@ -280,7 +282,7 @@ public class Game {
                     .filter(opt -> opt.getDecision() == Decision.SHEUNG)
                     .findFirst()
                     .map(ClaimOption::getValidCombos)
-                    .orElse(null);
+                    .orElse(Collections.emptyList());
 
             promptDiscardDecision(discardedTile, discarder, claimant, options, sheungCombos);
 
