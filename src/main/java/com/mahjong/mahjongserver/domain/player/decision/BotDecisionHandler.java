@@ -20,53 +20,69 @@ public class BotDecisionHandler implements PlayerDecisionHandler {
         this.gameService = gameService;
     }
 
+    private void runBotDelayed(Runnable action) {
+        new Thread(() -> {
+            try {
+                Thread.sleep(1500 + (long)(Math.random() * 1500)); // delay
+            } catch (InterruptedException ignored) {}
+
+            action.run();
+        }).start();
+    }
+
     @Override
     public void promptDecisionOnDraw(PlayerContext ctx, TableDTO table, Tile drawnTile, List<Decision> availableOptions) {
-        Decision decision = Decision.PASS;
+        runBotDelayed(() -> {
+            Decision decision = Decision.PASS;
 
-        if (availableOptions.contains(Decision.WIN) && decideWin(ctx, table, drawnTile, table.selfSeat())) {
-            decision = Decision.WIN;
-        } else if (availableOptions.contains(Decision.DARK_KONG) && decideKong(ctx, table, drawnTile, table.selfSeat())) {
-            decision = Decision.DARK_KONG;
-        } else if (availableOptions.contains(Decision.BRIGHT_KONG) && decideKong(ctx, table, drawnTile, table.selfSeat())) {
-            decision = Decision.BRIGHT_KONG;
-        }
+            if (availableOptions.contains(Decision.WIN) && decideWin(ctx, table, drawnTile, table.selfSeat())) {
+                decision = Decision.WIN;
+            } else if (availableOptions.contains(Decision.DARK_KONG) && decideKong(ctx, table, drawnTile, table.selfSeat())) {
+                decision = Decision.DARK_KONG;
+            } else if (availableOptions.contains(Decision.BRIGHT_KONG) && decideKong(ctx, table, drawnTile, table.selfSeat())) {
+                decision = Decision.BRIGHT_KONG;
+            }
 
-        gameService.handleDrawClaim(ctx.getRoomId(), ctx.getPlayer().getId(), decision);
+            gameService.handleDrawClaim(ctx.getRoomId(), ctx.getPlayer().getId(), decision);
+        });
     }
 
     @Override
     public void promptDecisionOnDiscard(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder,
                                         List<Decision> availableOptions, List<List<Tile>> sheungCombos) {
-        Decision decision = Decision.PASS;
-        List<Tile> sheungCombo = null;
+        runBotDelayed(() -> {
+            Decision decision = Decision.PASS;
+            List<Tile> sheungCombo = null;
 
-        if (availableOptions.contains(Decision.WIN) && decideWin(ctx, table, discardedTile, discarder)) {
-            decision = Decision.WIN;
-        } else if (availableOptions.contains(Decision.DARK_KONG) && decideKong(ctx, table, discardedTile, discarder)) {
-            decision = Decision.DARK_KONG;
-        } else if (availableOptions.contains(Decision.BRIGHT_KONG) && decideKong(ctx, table, discardedTile, discarder)) {
-            decision = Decision.BRIGHT_KONG;
-        } else if (availableOptions.contains(Decision.PONG) && decideKong(ctx, table, discardedTile, discarder)) {
-            decision = Decision.PONG;
-        } else if (availableOptions.contains(Decision.SHEUNG) && decideKong(ctx, table, discardedTile, discarder)) {
-            decision = Decision.SHEUNG;
-            sheungCombo = decideSheungCombo(ctx, table, sheungCombos);
-        }
+            if (availableOptions.contains(Decision.WIN) && decideWin(ctx, table, discardedTile, discarder)) {
+                decision = Decision.WIN;
+            } else if (availableOptions.contains(Decision.DARK_KONG) && decideKong(ctx, table, discardedTile, discarder)) {
+                decision = Decision.DARK_KONG;
+            } else if (availableOptions.contains(Decision.BRIGHT_KONG) && decideKong(ctx, table, discardedTile, discarder)) {
+                decision = Decision.BRIGHT_KONG;
+            } else if (availableOptions.contains(Decision.PONG) && decideKong(ctx, table, discardedTile, discarder)) {
+                decision = Decision.PONG;
+            } else if (availableOptions.contains(Decision.SHEUNG) && decideKong(ctx, table, discardedTile, discarder)) {
+                decision = Decision.SHEUNG;
+                sheungCombo = decideSheungCombo(ctx, table, sheungCombos);
+            }
 
-        gameService.handleDiscardClaim(ctx.getRoomId(), ctx.getPlayer().getId(), decision, sheungCombo);
+            gameService.handleDiscardClaim(ctx.getRoomId(), ctx.getPlayer().getId(), decision, sheungCombo);
+        });
     }
 
     @Override
     public void promptDiscard(PlayerContext ctx, TableDTO table) {
-        List<Tile> concealedTiles = table.hands().get(table.selfSeat()).concealedTiles();
-        Tile tileToDiscard = HandGrouper.getTilesToDiscard(concealedTiles, table.discardPile()).getFirst();
+        runBotDelayed(() -> {
+            List<Tile> concealedTiles = table.hands().get(table.selfSeat()).concealedTiles();
+            Tile tileToDiscard = HandGrouper.getTilesToDiscard(concealedTiles, table.discardPile()).getFirst();
 
-        DiscardResponseDTO response = new DiscardResponseDTO();
-        response.setRoomId(ctx.getRoomId());
-        response.setTile(tileToDiscard);
+            DiscardResponseDTO response = new DiscardResponseDTO();
+            response.setRoomId(ctx.getRoomId());
+            response.setTile(tileToDiscard);
 
-        gameService.handleDiscardResponse(ctx.getRoomId(), ctx.getPlayer().getId(), response);
+            gameService.handleDiscardResponse(ctx.getRoomId(), ctx.getPlayer().getId(), response);
+        });
     }
 
     @Override
@@ -106,6 +122,7 @@ public class BotDecisionHandler implements PlayerDecisionHandler {
                                TableDTO table,
                                Tile tile,
                                Seat discarder) {
+        // TODO: e.g. don't pong when it's used for sheungs
         return true;
     }
 

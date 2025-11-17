@@ -69,16 +69,14 @@ public class Hand {
 //============================== PERFORM HAND OPERATIONS ==============================//
 
     public boolean performSheung(Tile discardedTile, List<Tile> sheungCombo) {
-        if (!sheungCombo.contains(discardedTile)) return false;
-
-        List<Tile> toRemove = new ArrayList<>(sheungCombo);
-        toRemove.remove(discardedTile); // don't remove the discarded tile
-
-        if (!concealedTiles.containsAll(toRemove)) return false;
+        if (!concealedTiles.containsAll(sheungCombo)) return false;
 
         // safe to remove
-        concealedTiles.removeAll(toRemove);
-        return sheungs.add(new ArrayList<>(sheungCombo));
+        concealedTiles.removeAll(sheungCombo);
+        List<Tile> newCombo = new ArrayList<>(sheungCombo);
+        newCombo.add(discardedTile);
+        Collections.sort(newCombo);
+        return sheungs.add(newCombo);
     }
 
     public boolean performPong(Tile discardedTile) {

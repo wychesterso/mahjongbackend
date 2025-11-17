@@ -97,8 +97,11 @@ public class HandChecker {
     }
 
     public static List<List<Tile>> getSheungCombos(Hand hand, Tile discardedTile) {
-        List<Tile> concealedTiles = hand.getConcealedTiles();
+        List<Tile> concealedTiles = new ArrayList<>(hand.getConcealedTiles());
+        Collections.sort(concealedTiles);
+
         List<List<Tile>> result = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
 
         for (int i = 0; i < concealedTiles.size() - 1; i++) {
             Tile tile1 = concealedTiles.get(i);
@@ -109,7 +112,10 @@ public class HandChecker {
                 List<Tile> group = List.of(discardedTile, tile1, tile2);
 
                 if (isValidSheung(group)) {
-                    result.add(List.of(concealedTiles.get(i), concealedTiles.get(j)));
+                    String key = tile1.toString() + "-" + tile2.toString();
+                    if (seen.add(key)) {
+                        result.add(List.of(tile1, tile2));
+                    }
                 }
             }
         }
