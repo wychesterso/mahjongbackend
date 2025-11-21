@@ -26,7 +26,7 @@ public class Game {
     private boolean activeGame = false;
 
     // gameplay info
-    private final Table table = new Table();
+    private Table table = new Table();
     private final Seat windSeat;
     private final Seat zhongSeat;
     private Seat currentSeat;
@@ -101,12 +101,28 @@ public class Game {
     //============================== EVENTS ==============================//
 
     public void startGame() {
+        resetGameState();
+
         activeGame = true;
         System.out.println("[Game] startGame(): activeGame set to true for room=" + room.getRoomId() + ", currentSeat=" + currentSeat);
+
         dealStartingHands();
         System.out.println("[Game] startGame(): finished dealing hands for room=" + room.getRoomId());
         if (handleClaimsAfterDraw(table.getHand(currentSeat).getLastDrawnTile())) return;
         startTurnWithoutDraw();
+    }
+
+    private void resetGameState() {
+        table = new Table();
+        winnerSeats.clear();
+        numDraws = 0;
+
+        expectedClaims.clear();
+        claimResponses.clear();
+
+        awaitingDiscard = false;
+
+        currentSeat = zhongSeat;
     }
 
     public void startTurnWithoutDraw() {
@@ -124,6 +140,7 @@ public class Game {
         // draw tile
         Hand hand = table.getHand(currentSeat);
         Tile drawnTile = drawTile(hand);
+        numDraws++;
         if (drawnTile == null) {
             endGameByDraw();
             return;
@@ -143,6 +160,7 @@ public class Game {
         // draw tile
         Hand hand = table.getHand(currentSeat);
         Tile drawnTile = drawBonusTile(hand);
+        numDraws++;
         if (drawnTile == null) {
             endGameByDraw();
             return;
@@ -213,7 +231,7 @@ public class Game {
                 claims.add(new ClaimOption(Decision.PONG, null));
             }
 
-            if (HandChecker.checkSheung(hand, discardedTile)) {
+            if (currentSeat.next() == seat && HandChecker.checkSheung(hand, discardedTile)) {
                 claims.add(new ClaimOption(Decision.SHEUNG, HandChecker.getSheungCombos(hand, discardedTile)));
             }
 
@@ -516,15 +534,19 @@ public class Game {
 //============================== HANDLE FRONTEND RESPONSE - DRAW ==============================//
 
     public void handleClaimResponseFromDraw(Player player, Decision decision) {
-        room.getTimeoutScheduler().cancel("claim:" + player.getId());
+        if (room.getSeat(player) != currentSeat) {
+            System.out.println("[Game] Ignored invalid claim response, room=" + room.getRoomId() + ", claimer=" + player.getId() + ", decision=" + decision);
+            return;
+        }
 
-        if (room.getSeat(player) != currentSeat) return;
+        room.getTimeoutScheduler().cancel("claim:" + player.getId());
 
         Hand hand = table.getHand(currentSeat);
 
         switch (decision) {
             case WIN -> {
-                // TODO: end round, trigger win logic
+                winnerSeats.add(currentSeat);
+                endGameByWin();
             }
             case DARK_KONG -> {
                 Tile kongTile = hand.getLastDrawnTile();
@@ -556,8 +578,7 @@ public class Game {
 
         room.getGameEventPublisher().sendGameEnd(
                 room.getRoomId(),
-                "draw",
-                new EndGameDTO(Map.of(), Set.of(), DTOMapper.fromTable(table, null))
+                new EndGameDTO(GameResult.DRAW, Map.of(), Set.of(), DTOMapper.fromTable(table, null))
         );
 
         room.onGameEnd();
@@ -588,8 +609,7 @@ public class Game {
 
         room.getGameEventPublisher().sendGameEnd(
                 room.getRoomId(),
-                "win",
-                new EndGameDTO(winners, loserSeats, DTOMapper.fromTable(table, null))
+                new EndGameDTO(GameResult.WIN, winners, loserSeats, DTOMapper.fromTable(table, null))
         );
 
         room.onGameEnd();

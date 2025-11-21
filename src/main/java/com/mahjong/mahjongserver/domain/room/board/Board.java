@@ -6,13 +6,22 @@ import com.mahjong.mahjongserver.domain.room.board.tile.TileClassification;
 import java.util.*;
 
 public class Board {
+    private final int ogMinTilesLeft;
     private int minTilesLeft;
-    private List<Tile> drawPile = new ArrayList<>();
+    private List<Tile> drawPile = new LinkedList<>();
     private Stack<Tile> discardPile = new Stack<>();
     private boolean canTakeDiscard = false;
 
     public Board(int minTilesLeft) {
-        this.minTilesLeft = minTilesLeft;
+        this.ogMinTilesLeft = minTilesLeft;
+        resetBoard();
+    }
+
+    public void resetBoard() {
+        minTilesLeft = ogMinTilesLeft;
+        drawPile = new LinkedList<>();
+        discardPile = new Stack<>();
+
         for (Tile tile : Tile.values()) {
             if (tile.getTileType().getClassification() == TileClassification.FLOWER) {
                 drawPile.add(tile);

@@ -4,6 +4,10 @@ import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
 import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
+import com.mahjong.mahjongserver.dto.prompt.DiscardAfterDrawPromptDTO;
+import com.mahjong.mahjongserver.dto.prompt.DecisionOnDiscardPromptDTO;
+import com.mahjong.mahjongserver.dto.prompt.DecisionOnDrawPromptDTO;
+import com.mahjong.mahjongserver.dto.prompt.DiscardPromptDTO;
 import com.mahjong.mahjongserver.dto.state.TableDTO;
 import com.mahjong.mahjongserver.domain.core.GameEventPublisher;
 import org.springframework.stereotype.Component;
@@ -25,11 +29,7 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
                 "prompt_draw_decision",
-                Map.of(
-                        "table", table,
-                        "drawn_tile", drawnTile,
-                        "available_options", availableOptions
-                )
+                new DecisionOnDrawPromptDTO(table, drawnTile, availableOptions)
         );
     }
 
@@ -39,13 +39,7 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
                 "prompt_discard_decision",
-                Map.of(
-                        "table", table,
-                        "discarded_tile", discardedTile,
-                        "discarder", discarder,
-                        "available_options", availableOptions,
-                        "sheung_combos", sheungCombos
-                )
+                new DecisionOnDiscardPromptDTO(table, discardedTile, discarder, availableOptions, sheungCombos)
         );
     }
 
@@ -54,9 +48,7 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
                 "prompt_discard",
-                Map.of(
-                        "table", table
-                )
+                new DiscardPromptDTO(table)
         );
     }
 
@@ -65,10 +57,7 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
                 "prompt_discard_on_draw",
-                Map.of(
-                        "table", table,
-                        "drawn_tile", drawnTile
-                )
+                new DiscardAfterDrawPromptDTO(table, drawnTile)
         );
     }
 
@@ -77,7 +66,7 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
                 "prompt_end_game_decision",
-                null
+                Map.of()
         );
     }
 }

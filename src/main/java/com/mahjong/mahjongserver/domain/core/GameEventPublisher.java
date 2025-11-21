@@ -15,12 +15,10 @@ public class GameEventPublisher {
     }
 
     public void sendToPlayer(String playerId, Object payload) {
-        System.out.println("[GameEventPublisher] sendToPlayer -> playerId=" + playerId + ", payloadType=" + (payload==null?"null":payload.getClass().getSimpleName()));
         messagingTemplate.convertAndSendToUser(playerId, "/queue/game", payload);
     }
 
     public void sendToAll(String roomId, Object payload) {
-        System.out.println("[GameEventPublisher] sendToAll -> roomId=" + roomId + ", payloadType=" + (payload==null?"null":payload.getClass().getSimpleName()));
         messagingTemplate.convertAndSend("/topic/room/" + roomId, payload);
     }
 
@@ -45,7 +43,7 @@ public class GameEventPublisher {
     public void sendLog(String roomId, String message) {
         sendToAll(roomId, Map.of(
                 "type", "log",
-                "message", message
+                "data", message
         ));
     }
 
@@ -55,7 +53,8 @@ public class GameEventPublisher {
      */
     public void sendGameStart(String roomId) {
         sendToAll(roomId, Map.of(
-                "type", "game_start"
+                "type", "game_start",
+                "data", Map.of()
         ));
     }
 
@@ -86,20 +85,19 @@ public class GameEventPublisher {
     /**
      * Send a game-ended message to all players in the room.
      * @param roomId the id of the room.
-     * @param result either "draw" or "win".
      * @param data additional result info (e.g. winner seats, final table state, score).
      */
-    public void sendGameEnd(String roomId, String result, Object data) {
+    public void sendGameEnd(String roomId, Object data) {
         sendToAll(roomId, Map.of(
                 "type", "game_end",
-                "result", result,
                 "data", data
         ));
     }
 
     public void sendSessionEnded(String roomId) {
         sendToAll(roomId, Map.of(
-                "type", "session_ended"
+                "type", "session_ended",
+                "data", Map.of()
         ));
     }
 }

@@ -12,6 +12,15 @@ public class Hand {
     private final List<List<Tile>> darkKongs = new ArrayList<>();
     private final Set<Tile> flowers = new HashSet<>();
 
+    public void clearHand() {
+        concealedTiles.clear();
+        sheungs.clear();
+        pongs.clear();
+        brightKongs.clear();
+        darkKongs.clear();
+        flowers.clear();
+    }
+
 //============================== GETTERS ==============================//
 
     public List<Tile> getConcealedTiles() {
@@ -69,10 +78,10 @@ public class Hand {
 //============================== PERFORM HAND OPERATIONS ==============================//
 
     public boolean performSheung(Tile discardedTile, List<Tile> sheungCombo) {
-        if (!concealedTiles.containsAll(sheungCombo)) return false;
+        for (Tile tile : sheungCombo) {
+            if (!concealedTiles.remove(tile)) return false;
+        }
 
-        // safe to remove
-        concealedTiles.removeAll(sheungCombo);
         List<Tile> newCombo = new ArrayList<>(sheungCombo);
         newCombo.add(discardedTile);
         Collections.sort(newCombo);

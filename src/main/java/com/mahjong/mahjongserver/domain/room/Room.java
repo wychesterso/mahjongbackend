@@ -421,7 +421,10 @@ public class Room {
     public void collectEndGameDecision(Player player, EndGameDecision decision) {
         endGameDecisions.put(player, decision);
 
-        if (endGameDecisions.size() == playerContexts.size()) {
+        long numPlayers = playerContexts.values().stream()
+                .filter(Objects::nonNull)
+                .count();
+        if (endGameDecisions.size() == numPlayers) {
             processEndGameDecisions();
             endGameDecisions.clear();
         }
@@ -436,7 +439,12 @@ public class Room {
 
         if (allWantAnotherGame) {
             rotateSeatsAfterGame();
-            startGame();
+            boolean success = startGame();
+            if (success) {
+                getCurrentGame().startGame();
+            } else {
+                throw new IllegalStateException("Not all seats are filled!");
+            }
         } else {
             // TODO: Rotate in new players or bots to replace exiting players
             gameEventPublisher.sendSessionEnded(roomId); // close room
