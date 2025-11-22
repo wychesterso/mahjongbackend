@@ -92,7 +92,10 @@ public class DTOMapper {
         // determine if the player has a drawn tile
         Tile drawnTile = null;
         if (game.getCurrentSeat() == seat) {
-            drawnTile = game.getTable().getHand(seat).getLastDrawnTile();
+            Hand hand = game.getTable().getHand(seat);
+            if (hand.getConcealedTileCount() != 0) {
+                drawnTile = game.getTable().getHand(seat).getLastDrawnTile();
+            }
         }
 
         // only show decisions for current player if there are expected claims for them
