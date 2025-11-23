@@ -1,5 +1,7 @@
-package com.mahjong.mahjongserver.domain.game.score;
+package com.mahjong.mahjongserver.domain.game.score.grouping;
 
+import com.mahjong.mahjongserver.domain.game.score.HandChecker;
+import com.mahjong.mahjongserver.domain.game.score.data.MeldType;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.room.board.tile.TileClassification;
 import com.mahjong.mahjongserver.domain.room.board.tile.TileType;
@@ -10,37 +12,60 @@ public class HandGrouper {
 
 //============================== GROUPING CONCEALED TILES ==============================//
 
-    public static List<List<List<Tile>>> getValidGroupings(List<Tile> concealedTiles) {
-        List<List<List<Tile>>> groupings = new ArrayList<>();
+    /**
+     * Generates all valid groupings for the given collection of concealed tiles.
+     * @param concealedTiles the list of concealed tiles to group.
+     * @param winningTile the winning tile.
+     * @return the list of found valid groupings.
+     */
+    public static List<GroupedHand> getValidGroupings(List<Tile> concealedTiles, Tile winningTile) {
+        List<GroupedHand> groupings = new ArrayList<>();
 
         if (concealedTiles.size() == 17) {
-            HandGrouper.getThirteenOrphansGroupings(groupings, concealedTiles);
-            HandGrouper.getSixteenDisjointGroupings(groupings, concealedTiles);
-            HandGrouper.getLikKuLikKuGroupings(groupings, concealedTiles);
+            getThirteenOrphansGroupings(groupings, concealedTiles, winningTile);
+            getSixteenDisjointGroupings(groupings, concealedTiles, winningTile);
+            getLikKuLikKuGroupings(groupings, concealedTiles, winningTile);
         }
-        getRegularGroupings(groupings, new ArrayList<>(concealedTiles), new ArrayList<>());
+
+        List<Tile> newConcealedTiles = new ArrayList<>(concealedTiles);
+        Collections.sort(newConcealedTiles);
+        getRegularGroupings(groupings, newConcealedTiles, winningTile, new GroupedHandBuilder());
 
         return groupings;
     }
 
-    private static void getRegularGroupings(List<List<List<Tile>>> groupings, List<Tile> concealedTiles,
-                                     List<List<Tile>> currentGroup) {
+    /**
+     * Generates all valid groupings in the standard format, with 5 melds and 1 pair.
+     * @param groupings the list of found valid groupings.
+     * @param concealedTiles the list of unused concealed tiles.
+     * @param winningTile the winning tile, or null if already used in the builder's grouping.
+     * @param builder the grouping builder.
+     */
+    private static void getRegularGroupings(List<GroupedHand> groupings,
+                                            List<Tile> concealedTiles,
+                                            Tile winningTile,
+                                            GroupedHandBuilder builder) {
         int numTiles = concealedTiles.size();
         if (numTiles < 2) return;
 
         // base case: 2 tiles left
         if (numTiles == 2) {
-            if (concealedTiles.get(0) == concealedTiles.get(1)) {
+            if (concealedTiles.get(0) == concealedTiles.get(1)
+                    && (winningTile == null || concealedTiles.get(0) == winningTile)) {
                 // form the pair with last 2 tiles
                 List<Tile> pair = List.of(concealedTiles.get(0), concealedTiles.get(1));
-                currentGroup.add(pair);
-                groupings.add(new ArrayList<>(currentGroup));
-                currentGroup.removeLast(); // backtrack
+                builder.addConcealedGroup(pair);
+
+                boolean isWinningGroup = winningTile != null;
+                if (isWinningGroup) setWinningGroup(builder, pair, MeldType.PAIR);
+                groupings.add(new GroupedHand(builder)); // add new valid grouping
+                if (isWinningGroup) unsetWinningGroup(builder);
+
+                builder.backtrack();
             }
             return;
         }
 
-        Collections.sort(concealedTiles);
         List<List<Tile>> seenGroups = new ArrayList<>();
 
         // recursion: form a group of 3 then check remaining tiles
@@ -54,34 +79,63 @@ public class HandGrouper {
                     Tile t3 = concealedTiles.get(k);
 
                     List<Tile> group = List.of(t1, t2, t3);
-                    if (!seenGroups.contains(group) && HandChecker.isValidGroup(group)) {
-                        currentGroup.add(group);
+                    if (!seenGroups.contains(group)) {
+                        seenGroups.add(group);
 
+                        // check if group is valid
+                        MeldType type = HandChecker.checkGroupType(group);
+                        if (type == null) continue;
+
+                        builder.addConcealedGroup(group);
                         List<Tile> newConcealedTiles = new ArrayList<>(concealedTiles);
                         newConcealedTiles.remove(t1);
                         newConcealedTiles.remove(t2);
                         newConcealedTiles.remove(t3);
 
-                        getRegularGroupings(groupings, newConcealedTiles, currentGroup);
+                        if (winningTile != null && group.contains(winningTile)) {
+                            // option 1: use this group as winning group
+                            setWinningGroup(builder, group, type);
+                            getRegularGroupings(groupings, newConcealedTiles, null, builder);
+                            unsetWinningGroup(builder);
+                        }
 
-                        currentGroup.removeLast(); // backtrack
+                        // option 2: use this group but not as winning group
+                        getRegularGroupings(groupings, newConcealedTiles, winningTile, builder);
+
+                        // backtrack
+                        builder.backtrack();
                     }
-                    seenGroups.add(group);
                 }
             }
         }
     }
 
-    private static void getThirteenOrphansGroupings(List<List<List<Tile>>> groupings, List<Tile> concealedTiles) {
+    private static void getThirteenOrphansGroupings(List<GroupedHand> groupings,
+                                                    List<Tile> concealedTiles,
+                                                    Tile winningTile) {
 
     }
 
-    private static void getSixteenDisjointGroupings(List<List<List<Tile>>> groupings, List<Tile> concealedTiles) {
+    private static void getSixteenDisjointGroupings(List<GroupedHand> groupings,
+                                                    List<Tile> concealedTiles,
+                                                    Tile winningTile) {
 
     }
 
-    private static void getLikKuLikKuGroupings(List<List<List<Tile>>> groupings, List<Tile> concealedTiles) {
+    private static void getLikKuLikKuGroupings(List<GroupedHand> groupings,
+                                               List<Tile> concealedTiles,
+                                               Tile winningTile) {
 
+    }
+
+    private static void setWinningGroup(GroupedHandBuilder builder, List<Tile> group, MeldType type) {
+        builder.setWinningGroup(group);
+        builder.setWinningGroupType(type);
+    }
+
+    private static void unsetWinningGroup(GroupedHandBuilder builder) {
+        builder.setWinningGroup(null);
+        builder.setWinningGroupType(null);
     }
 
 //============================== SORTING GROUPED TILES ==============================//

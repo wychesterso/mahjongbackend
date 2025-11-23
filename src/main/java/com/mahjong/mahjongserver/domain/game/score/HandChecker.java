@@ -1,5 +1,6 @@
 package com.mahjong.mahjongserver.domain.game.score;
 
+import com.mahjong.mahjongserver.domain.game.score.data.MeldType;
 import com.mahjong.mahjongserver.domain.room.board.Hand;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.room.board.tile.TileClassification;
@@ -168,6 +169,17 @@ public class HandChecker {
      */
     public static boolean isValidGroup(List<Tile> tiles) {
         return isValidPong(tiles) || isValidSheung(tiles);
+    }
+
+    /**
+     * Checks if the given tiles form a valid group of 3, and whether they are a Sheung or Pong.
+     * @param tiles the tiles to check.
+     * @return the meld type iff the tiles form a valid group, null otherwise.
+     */
+    public static MeldType checkGroupType(List<Tile> tiles) {
+        if (isValidPong(tiles)) return MeldType.PONG;
+        if (isValidSheung(tiles)) return MeldType.SHEUNG;
+        return null;
     }
 
     /**

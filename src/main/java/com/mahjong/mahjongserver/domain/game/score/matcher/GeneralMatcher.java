@@ -1,5 +1,6 @@
 package com.mahjong.mahjongserver.domain.game.score.matcher;
 
+import com.mahjong.mahjongserver.domain.game.score.data.MeldType;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringPattern;
 import com.mahjong.mahjongserver.domain.room.Seat;
@@ -20,7 +21,7 @@ public class GeneralMatcher implements ScoringPatternMatcher {
     private void matchZhong() {
         Seat zhongSeat = scoringContext.getZhongSeat();
         if (zhongSeat == scoringContext.getWinnerSeat() || zhongSeat == scoringContext.getLoserSeat()) {
-            scoringContext.addScoringPattern(ScoringPattern.ZHONG);
+            scoringContext.addScoringPattern(ScoringPattern.DEALER);
         }
     }
 
@@ -39,6 +40,12 @@ public class GeneralMatcher implements ScoringPatternMatcher {
                 scoringContext.addScoringPattern(ScoringPattern.GOOD_PAIR);
                 return;
             }
+        }
+    }
+
+    private void matchWaitOnTwoPairs() {
+        if (scoringContext.getWinningGroupType() == MeldType.PONG) {
+            scoringContext.addScoringPattern(ScoringPattern.WAIT_ON_TWO_PAIRS);
         }
     }
 }

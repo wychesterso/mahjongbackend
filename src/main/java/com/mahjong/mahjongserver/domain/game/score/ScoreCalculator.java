@@ -581,7 +581,7 @@ public interface ScoreCalculator {
 //        if (points.contains(Score.MO_ZI_FA) && points.contains(Score.PING_WU)) {
 //            points.remove(Score.MO_ZI_FA);
 //            points.remove(Score.PING_WU);
-//            points.add(Score.MO_ZI_FA_PING_WU);
+//            points.add(Score.ALL_SHEUNGS_NO_WORDS_OR_FLOWERS);
 //        }
 //
 //
@@ -589,7 +589,7 @@ public interface ScoreCalculator {
 //        if (brightSheungs.isEmpty() && brightPongs.isEmpty()
 //                && points.contains(Score.SELF_DRAW)) {
 //            points.remove(Score.SELF_DRAW);
-//            points.add(Score.MUN_TSING_SELF_DRAW);
+//            points.add(Score.ALL_CONCEALED_SELF_DRAW);
 //        } else if (brightSheungs.isEmpty() && brightPongs.isEmpty()) {
 //            points.add(Score.MUN_TSING);
 //        }
@@ -616,7 +616,7 @@ public interface ScoreCalculator {
 //                points.add(Score.MM_MUN_CHAI);
 //            }
 //        } else if (typeCount == 2 && winds.isEmpty() && dragons.isEmpty()) {
-//            points.add(Score.KUT_YAT_MUN);
+//            points.add(Score.TWO_SUITS);
 //        } else if (typeCount == 1) {
 //            if (winds.isEmpty() && dragons.isEmpty()) {
 //                points.add(Score.TSING_YAT_SIK);
@@ -628,11 +628,11 @@ public interface ScoreCalculator {
 //
 //        // ALL GROUPS ARE PONGS/KONGS (對對胡, 間間胡)
 //        if (pongsAndKongs.size() == 5) {
-//            if (points.contains(Score.MUN_TSING_SELF_DRAW)) {
-//                points.remove(Score.MUN_TSING_SELF_DRAW);
-//                points.add(Score.KAN_KAN_WU);
+//            if (points.contains(Score.ALL_CONCEALED_SELF_DRAW)) {
+//                points.remove(Score.ALL_CONCEALED_SELF_DRAW);
+//                points.add(Score.ALL_CONCEALED_PONGS_SELF_DRAW);
 //            } else {
-//                points.add(Score.DUI_DUI_WU);
+//                points.add(Score.ALL_PONGS);
 //            }
 //        }
 //
@@ -647,7 +647,7 @@ public interface ScoreCalculator {
 //                        || (checkSameType(List.of(wonOffTile, starterTile))
 //                        && (wonOffTile.getTileNum() == starterTile.getTileNum() - 1
 //                        || wonOffTile.getTileNum() == starterTile.getTileNum() + 3))) {
-//                    points.add(Score.GA_DUK);
+//                    points.add(Score.SINGLE_WAIT_FOR_TWO_MELDS);
 //                } else if (checkSameType(List.of(wonOffTile, starterTile))) {
 //                    for (List<Tile> pongGroup : darkPongs) {
 //                        Tile pongTile = pongGroup.getFirst();
@@ -656,16 +656,16 @@ public interface ScoreCalculator {
 //                                && wonOffTile.getTileNum() == starterTile.getTileNum() - 2)
 //                                || (wonOffTile.getTileNum() == pongTile.getTileNum() + 1
 //                                && wonOffTile.getTileNum() == starterTile.getTileNum() + 4)))) {
-//                            points.add(Score.GA_DUK);
+//                            points.add(Score.SINGLE_WAIT_FOR_TWO_MELDS);
 //                            break;
 //                        }
 //                    }
 //                }
-//                if (points.contains(Score.GA_DUK)) {
+//                if (points.contains(Score.SINGLE_WAIT_FOR_TWO_MELDS)) {
 //                    break;
 //                }
 //            }
-//            if (!points.contains(Score.GA_DUK)) {
+//            if (!points.contains(Score.SINGLE_WAIT_FOR_TWO_MELDS)) {
 //                points.add(Score.DUK_DUK);
 //            }
 //        } else {
@@ -680,11 +680,11 @@ public interface ScoreCalculator {
 //                    for (List<Tile> otherGroup : darkSheungs) {
 //                        Tile otherStarterTile = otherGroup.getFirst();
 //                        if (wonOffTile == otherStarterTile) {
-//                            points.add(Score.GA_DUK);
+//                            points.add(Score.SINGLE_WAIT_FOR_TWO_MELDS);
 //                            break;
 //                        }
 //                    }
-//                    if (!points.contains(Score.GA_DUK)) {
+//                    if (!points.contains(Score.SINGLE_WAIT_FOR_TWO_MELDS)) {
 //                        points.add(Score.DUK_DUK);
 //                        break;
 //                    }
@@ -692,11 +692,11 @@ public interface ScoreCalculator {
 //                    for (List<Tile> otherGroup : darkSheungs) {
 //                        Tile otherEnderTile = otherGroup.getLast();
 //                        if (wonOffTile == otherEnderTile) {
-//                            points.add(Score.GA_DUK);
+//                            points.add(Score.SINGLE_WAIT_FOR_TWO_MELDS);
 //                            break;
 //                        }
 //                    }
-//                    if (!points.contains(Score.GA_DUK)) {
+//                    if (!points.contains(Score.SINGLE_WAIT_FOR_TWO_MELDS)) {
 //                        points.add(Score.DUK_DUK);
 //                        break;
 //                    }
@@ -745,13 +745,13 @@ public interface ScoreCalculator {
 //        if (numOneNineTiles + numWordTiles == 0) {
 //            points.add(Score.DUEN_YIU);
 //        } else if (numWordTiles + numNonOneNineWordTiles == 0) {
-//            points.add(Score.TSING_YIU);
+//            points.add(Score.ALL_WONDERS_NO_WORDS);
 //        } else if (numNonOneNineWordTiles == 0) {
-//            points.add(Score.WUN_YIU);
+//            points.add(Score.ALL_WONDERS);
 //        } else if (numGroupsWithOneNineTiles == allGroups.size()) {
-//            points.add(Score.TSUEN_DAI_YIU);
+//            points.add(Score.ALL_USING_WONDERS_NO_WORDS);
 //        } else if (numGroupsWithOneNineTiles + numGroupsWithWordTiles == allGroups.size()) {
-//            points.add(Score.TSUEN_DAI_WUN_YIU);
+//            points.add(Score.ALL_USING_WONDERS);
 //        }
 //
 //
@@ -782,16 +782,16 @@ public interface ScoreCalculator {
 //            if (count == 4) {
 //                int countGroups = numDifferentGroups.get(tile);
 //                switch (countGroups) {
-//                    case 4 -> points.add(Score.SEI_KWAI_SEI);
-//                    case 3 -> points.add(Score.SEI_KWAI_YEE);
-//                    case 2 -> points.add(Score.SEI_KWAI_YAT);
+//                    case 4 -> points.add(Score.FOUR_TILES_FOUR_GROUPS);
+//                    case 3 -> points.add(Score.FOUR_TILES_THREE_GROUPS);
+//                    case 2 -> points.add(Score.FOUR_TILES_TWO_GROUPS);
 //                }
 //            }
 //        }
 //
 //
 //        // KONGS AND DARK PONGS (暗刻)
-//        if (!points.contains(Score.KAN_KAN_WU)) {
+//        if (!points.contains(Score.ALL_CONCEALED_PONGS_SELF_DRAW)) {
 //            int numDarkHaks = kongs.size();
 //            for (List<Tile> group : darkPongs) {
 //                if (group.getFirst() != wonOffTile || points.contains(Score.SELF_DRAW)) {
@@ -800,9 +800,9 @@ public interface ScoreCalculator {
 //            }
 //            switch (numDarkHaks) {
 //                case 5 -> points.add(Score.MM_UM_HAK);
-//                case 4 -> points.add(Score.SEI_UM_HAK);
+//                case 4 -> points.add(Score.FOUR_CONCEALED_PONGS);
 //                case 3 -> points.add(Score.SAM_UM_HAK);
-//                case 2 -> points.add(Score.YEE_UM_HAK);
+//                case 2 -> points.add(Score.TWO_CONCEALED_PONGS);
 //            }
 //        }
 //
@@ -820,20 +820,20 @@ public interface ScoreCalculator {
 //        // 4+ SHEUNGS WITH SAME NUMBER (同順)
 //        for (Map.Entry<Integer, Integer> entry : fungCount.entrySet()) {
 //            switch (entry.getValue()) {
-//                case 5 -> points.add(Score.MM_TONG_SHUN);
-//                case 4 -> points.add(Score.SEI_TONG_SHUN);
+//                case 5 -> points.add(Score.FIVE_ENCOUNTERS);
+//                case 4 -> points.add(Score.FOUR_ENCOUNTERS);
 //            }
 //        }
 //
 //        // only check for 般高/相逢 when there is no 同順
-//        if (!points.contains(Score.MM_TONG_SHUN)
-//                && !points.contains(Score.SEI_TONG_SHUN)) {
+//        if (!points.contains(Score.FIVE_ENCOUNTERS)
+//                && !points.contains(Score.FOUR_ENCOUNTERS)) {
 //
 //            // IDENTICAL SHEUNGS (般高)
 //            for (Map.Entry<Tile, Integer> entry : sheungCount.entrySet()) {
 //                switch (entry.getValue()) {
 //                    case 4 -> points.add(Score.SEI_PUN_KO);
-//                    case 3 -> points.add(Score.SAM_PUN_KO);
+//                    case 3 -> points.add(Score.THREE_IDENTICAL_SHEUNGS);
 //                    case 2 -> points.add(Score.YAT_PUN_KO);
 //                }
 //            }
@@ -868,7 +868,7 @@ public interface ScoreCalculator {
 //                                List<Tile> checkYeeSheungFung = List.of(tile1, tile2);
 //                                if (checkDifferentType(checkYeeSheungFung)
 //                                        && checkSameNum(checkYeeSheungFung)) {
-//                                    points.add(Score.YEE_SHEUNG_FUNG);
+//                                    points.add(Score.TWO_SHEUNGS_MATCHING_SEQUENCE);
 //                                    unusedSheungs.remove(group1);
 //                                    unusedSheungs.remove(group2);
 //                                }
@@ -895,9 +895,9 @@ public interface ScoreCalculator {
 //                case 3 -> points.add(Score.DAI_SAM_HING_DAI);
 //                case 2 -> {
 //                    if (tileNum == pairTile.getTileNum()) {
-//                        points.add(Score.SIU_SAM_HING_DAI);
+//                        points.add(Score.LITTLE_THREE_BROTHERS);
 //                    } else {
-//                        points.add(Score.YEE_HING_DAI);
+//                        points.add(Score.TWO_PONGS_MATCHING_NUMBER);
 //                    }
 //                }
 //            }
@@ -919,7 +919,7 @@ public interface ScoreCalculator {
 //                        Tile tile3 = group3.getFirst();
 //                        if (checkSameType(List.of(tile1, tile3))) {
 //                            if (tile2.getTileNum() == tile3.getTileNum() - 1) {
-//                                points.add(Score.DAI_SAM_TSZ_MUI);
+//                                points.add(Score.BIG_THREE_SISTERS);
 //                                daiSamFlag = true;
 //                            }
 //                        }
@@ -927,7 +927,7 @@ public interface ScoreCalculator {
 //                    if (!daiSamFlag && checkSameType(List.of(tile1, pairTile))
 //                            && (pairTile.getTileNum() == tile1.getTileNum() - 1
 //                            || pairTile.getTileNum() == tile2.getTileNum() + 1)) {
-//                        points.add(Score.SIU_SAM_TSZ_MUI);
+//                        points.add(Score.LITTLE_THREE_SISTERS);
 //                    }
 //                }
 //            }
@@ -1070,7 +1070,7 @@ public interface ScoreCalculator {
 //                            if (!twoGroupsAlreadyUsed) {
 //                                umZhapLungCombinations.add(List.of(i, j, k));
 //                                umZhapLungStarters.add(List.of(tile1, tile2, tile3));
-//                                points.add(Score.UM_ZHAP_LUNG);
+//                                points.add(Score.CONCEALED_MIXED_DRAGON);
 //                            }
 //                        }
 //                    }
@@ -1114,17 +1114,17 @@ public interface ScoreCalculator {
 //                                    unusedSheungs.remove(group3);
 //                                    if (unusedSheungs.contains(group1)
 //                                            && unusedSheungs.contains(group2)) {
-//                                        points.add(Score.MING_ZHAP_LUNG);
+//                                        points.add(Score.MELDED_MIXED_DRAGON);
 //                                    } else if (unusedSheungs.contains(group1)
 //                                            && unusedSheungs.contains(group3)) {
-//                                        points.add(Score.MING_ZHAP_LUNG);
+//                                        points.add(Score.MELDED_MIXED_DRAGON);
 //                                    } else if (unusedSheungs.contains(group2)
 //                                            && unusedSheungs.contains(group3)) {
-//                                        points.add(Score.MING_ZHAP_LUNG);
+//                                        points.add(Score.MELDED_MIXED_DRAGON);
 //                                    }
 //                                } else {
 //                                    zhapLungCombinations.add(List.of(i, j, k));
-//                                    points.add(Score.MING_ZHAP_LUNG);
+//                                    points.add(Score.MELDED_MIXED_DRAGON);
 //                                }
 //                            }
 //                        }
@@ -1139,28 +1139,28 @@ public interface ScoreCalculator {
 //            if (points.contains(Score.SELF_DRAW)) {
 //                points.add(Score.BOON_KAU_YAN);
 //            } else {
-//                points.add(Score.TSUEN_KAU_YAN);
+//                points.add(Score.ALL_MELDED);
 //            }
 //        }
 //
 //
 //        // WIN AFTER BONUS DRAWS (花上自摸, 摃上自摸)
 //        if (lastEvent.equals("flower") && points.contains(Score.SELF_DRAW)) {
-//            points.add(Score.FA_SHEUNG_SELF_DRAW);
+//            points.add(Score.SELF_DRAW_AFTER_DRAWING_FLOWER);
 //        } else if (lastEvent.equals("double kong") && points.contains(Score.SELF_DRAW)) {
-//            points.add(Score.KONG_SHEUNG_KONG_SELF_DRAW);
+//            points.add(Score.SELF_DRAW_AFTER_TWO_KONGS);
 //        } else if (lastEvent.equals("kong") && points.contains(Score.SELF_DRAW)) {
-//            points.add(Score.KONG_SHEUNG_SELF_DRAW);
+//            points.add(Score.SELF_DRAW_AFTER_KONG);
 //        }
 //
 //
 //        // WIN ON LAST FEW DRAWS (七只內, 十只內, 海底撈月)
 //        if (numUnrevealedTiles == 8 && points.contains(Score.SELF_DRAW)) {
-//            points.add(Score.HOI_DAI_LAO_YUET);
+//            points.add(Score.WIN_ON_LAST_DRAW);
 //        } else if (numUnrevealedTiles <= 11) {
-//            points.add(Score.TSAT_TSEK_LOI);
+//            points.add(Score.FIVE_DISCARDS_LEFT);
 //        } else if (numUnrevealedTiles <= 14) {
-//            points.add(Score.SAP_TSEK_LOI);
+//            points.add(Score.TEN_DISCARDS_LEFT);
 //        }
 //
 //

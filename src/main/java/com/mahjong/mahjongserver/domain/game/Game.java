@@ -30,6 +30,7 @@ public class Game {
     private final Seat windSeat;
     private final Seat zhongSeat;
     private Seat currentSeat;
+    private GameAction currentAction = GameAction.OTHER;
 
     // game statistics and scoring
     private final List<Seat> winnerSeats = new ArrayList<>();
@@ -41,6 +42,9 @@ public class Game {
     private final Map<Seat, ClaimResolution> claimResponses = new HashMap<>();
     private static final long TIMEOUT_MILLIS = 10_000;
     private boolean awaitingDiscard = false;
+
+    // win info
+    private Tile winningTile = null;
 
     public Game(Room room, Seat windSeat) {
         this.room = room;
@@ -86,6 +90,8 @@ public class Game {
         return currentSeat;
     }
 
+    public GameAction getCurrentAction() { return currentAction; }
+
     public List<Seat> getWinnerSeats() {
         return winnerSeats;
     }
@@ -97,6 +103,10 @@ public class Game {
     public int getNumDraws() {
         return numDraws;
     }
+
+    public Tile getWinningTile() { return winningTile; }
+
+    public boolean isAwaitingDiscard() { return awaitingDiscard; }
 
     //============================== EVENTS ==============================//
 
@@ -128,6 +138,7 @@ public class Game {
     public void startTurnWithoutDraw() {
         System.out.println("[Game] startTurnWithoutDraw(): room=" + room.getRoomId() + ", currentSeat=" + currentSeat);
         resetClaims();
+        currentAction = GameAction.NO_DRAW;
         updateTableState();
         promptDiscard();
     }
@@ -135,7 +146,7 @@ public class Game {
     public void startTurnWithDraw() {
         System.out.println("[Game] startTurnWithDraw(): room=" + room.getRoomId() + ", currentSeat=" + currentSeat);
         resetClaims();
-        updateTableState();
+        currentAction = GameAction.DRAW;
 
         // draw tile
         Hand hand = table.getHand(currentSeat);
@@ -155,7 +166,7 @@ public class Game {
 
     public void startTurnWithBonusDraw() {
         resetClaims();
-        updateTableState();
+        currentAction = GameAction.DRAW;
 
         // draw tile
         Hand hand = table.getHand(currentSeat);
@@ -435,7 +446,7 @@ public class Game {
 
                 winnerSeats.add(claimer);
             }
-            getBoard().takeFromDiscardPile(); // remove the tile from discard pile
+            winningTile = getBoard().takeFromDiscardPile(); // remove the tile from discard pile
 
             endGameByWin();
             return;
@@ -499,6 +510,7 @@ public class Game {
         }
 
         awaitingDiscard = false;
+        currentAction = GameAction.NO_DRAW;
         System.out.println("[Game] Received discard request, room=" + room.getRoomId() + ", seat=" + playerSeat + ", discardedTile=" + discardedTile);
 
         // 2. remove tile from hand and update discard pile
@@ -546,6 +558,7 @@ public class Game {
         switch (decision) {
             case WIN -> {
                 winnerSeats.add(currentSeat);
+                winningTile = hand.getLastDrawnTile();
                 endGameByWin();
             }
             case DARK_KONG -> {

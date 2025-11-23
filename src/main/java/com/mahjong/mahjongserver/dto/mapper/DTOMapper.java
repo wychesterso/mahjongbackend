@@ -1,6 +1,7 @@
 package com.mahjong.mahjongserver.dto.mapper;
 
 import com.mahjong.mahjongserver.domain.game.Game;
+import com.mahjong.mahjongserver.domain.game.GameAction;
 import com.mahjong.mahjongserver.domain.game.claim.ClaimOption;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
 import com.mahjong.mahjongserver.domain.player.decision.Decision;
@@ -45,35 +46,17 @@ public class DTOMapper {
     }
 
     public static ScoringContextDTO fromScoringContext(ScoringContext scoringContext) {
-        List<TileGroupDTO> tileGroupDTOS = new ArrayList<>();
-        tileGroupDTOS.add(fromTileGroup(scoringContext.getFlowers(), "flowers"));
-        for (List<Tile> pair : scoringContext.getConcealedPairs()) {
-            tileGroupDTOS.add(fromTileGroup(pair, "pair"));
-        }
-        for (List<Tile> group : scoringContext.getConcealedSheungs()) {
-            tileGroupDTOS.add(fromTileGroup(group, "concealed sheung"));
-        }
-        for (List<Tile> group : scoringContext.getRevealedSheungs()) {
-            tileGroupDTOS.add(fromTileGroup(group, "revealed sheung"));
-        }
-        for (List<Tile> group : scoringContext.getConcealedPongs()) {
-            tileGroupDTOS.add(fromTileGroup(group, "concealed pong"));
-        }
-        for (List<Tile> group : scoringContext.getRevealedPongs()) {
-            tileGroupDTOS.add(fromTileGroup(group, "revealed pong"));
-        }
-        for (List<Tile> group : scoringContext.getBrightKongs()) {
-            tileGroupDTOS.add(fromTileGroup(group, "bright kong"));
-        }
-        for (List<Tile> group : scoringContext.getDarkKongs()) {
-            tileGroupDTOS.add(fromTileGroup(group, "dark kong"));
-        }
+        List<List<Tile>> concealedMelds = new ArrayList<>(scoringContext.getConcealedMelds());
+        concealedMelds.addAll(scoringContext.getPairs());
 
-        return new ScoringContextDTO(scoringContext.getScoringPatterns(), null);
-    }
-
-    public static TileGroupDTO fromTileGroup(Collection<Tile> tileGroup, String type) {
-        return new TileGroupDTO(type, new ArrayList<>(tileGroup));
+        return new ScoringContextDTO(
+                scoringContext.getScoringPatterns(),
+                scoringContext.getFlowers(),
+                scoringContext.getRevealedMelds(),
+                concealedMelds,
+                scoringContext.getWinningGroup(),
+                scoringContext.getWinningTile()
+        );
     }
 
     public static RoomInfoDTO fromRoom(Room room) {
@@ -91,7 +74,7 @@ public class DTOMapper {
 
         // determine if the player has a drawn tile
         Tile drawnTile = null;
-        if (game.getCurrentSeat() == seat) {
+        if (game.getCurrentAction() == GameAction.DRAW && game.getCurrentSeat() == seat) {
             Hand hand = game.getTable().getHand(seat);
             if (hand.getConcealedTileCount() != 0) {
                 drawnTile = game.getTable().getHand(seat).getLastDrawnTile();

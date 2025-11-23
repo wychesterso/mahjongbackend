@@ -48,9 +48,9 @@ public class FlowerMatcher implements ScoringPatternMatcher {
             }
 
             if (flower.getTileNum() == scoringContext.getWinnerSeat().ordinal() + 1) {
-                scoringContext.addScoringPattern(ScoringPattern.GOOD_FLOWER);
+                scoringContext.addScoringPattern(ScoringPattern.MATCHING_FLOWER);
             } else {
-                scoringContext.addScoringPattern(ScoringPattern.BAD_FLOWER);
+                scoringContext.addScoringPattern(ScoringPattern.FLOWER);
             }
         }
     }

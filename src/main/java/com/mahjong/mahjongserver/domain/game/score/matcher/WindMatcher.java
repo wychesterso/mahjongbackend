@@ -74,10 +74,10 @@ public class WindMatcher implements ScoringPatternMatcher {
 
     private ScoringPattern getWindPattern(Tile windTile) {
         return switch (windTile) {
-            case EAST -> ScoringPattern.EAST;
-            case SOUTH -> ScoringPattern.SOUTH;
-            case WEST -> ScoringPattern.WEST;
-            case NORTH -> ScoringPattern.NORTH;
+            case EAST -> ScoringPattern.EAST_WIND;
+            case SOUTH -> ScoringPattern.SOUTH_WIND;
+            case WEST -> ScoringPattern.WEST_WIND;
+            case NORTH -> ScoringPattern.NORTH_WIND;
             default -> throw new IllegalArgumentException("Not a wind tile: " + windTile);
         };
     }

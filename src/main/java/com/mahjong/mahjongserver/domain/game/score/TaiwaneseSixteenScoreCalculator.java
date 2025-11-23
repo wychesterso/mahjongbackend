@@ -1,15 +1,15 @@
 package com.mahjong.mahjongserver.domain.game.score;
 
 import com.mahjong.mahjongserver.domain.game.Game;
-import com.mahjong.mahjongserver.domain.game.score.data.GroupedHand;
+import com.mahjong.mahjongserver.domain.game.score.grouping.GroupedHand;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
+import com.mahjong.mahjongserver.domain.game.score.grouping.HandGrouper;
 import com.mahjong.mahjongserver.domain.game.score.matcher.*;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.Table;
 import com.mahjong.mahjongserver.domain.room.board.Hand;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class TaiwaneseSixteenScoreCalculator implements ScoreCalculator {
@@ -23,13 +23,14 @@ public class TaiwaneseSixteenScoreCalculator implements ScoreCalculator {
 
         // get all valid groupings for concealed tiles
         List<Tile> concealedTiles = hand.getConcealedTiles();
-        List<List<List<Tile>>> groupings = HandGrouper.getValidGroupings(concealedTiles);
+        List<GroupedHand> groupings = HandGrouper.getValidGroupings(concealedTiles, game.getWinningTile());
 
         ScoringContext bestScoringContext = null;
 
         // determine which grouping gives the best score
-        for (List<List<Tile>> grouping : groupings) {
-            GroupedHand groupedHand = new GroupedHand(grouping, hand);
+        for (GroupedHand groupedHand : groupings) {
+            groupedHand.populateRevealedTiles(hand);
+
             ScoringContext scoringContext = new ScoringContext(game, winnerSeat, groupedHand);
             calculateScoreForGrouping(scoringContext);
 
@@ -49,7 +50,7 @@ public class TaiwaneseSixteenScoreCalculator implements ScoreCalculator {
             new WindMatcher(),
             new DragonMatcher(),
             new AllSheungsMatcher(),
-            new FrontAndBackMatcher()
+            new LoSiuMatcher()
     );
 
     private void calculateScoreForGrouping(ScoringContext scoringContext) {

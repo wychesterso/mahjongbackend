@@ -1,7 +1,7 @@
 package com.mahjong.mahjongserver.domain.player.decision;
 
 import com.mahjong.mahjongserver.domain.core.GameService;
-import com.mahjong.mahjongserver.domain.game.score.HandGrouper;
+import com.mahjong.mahjongserver.domain.game.score.grouping.HandGrouper;
 import com.mahjong.mahjongserver.domain.player.context.PlayerContext;
 import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;

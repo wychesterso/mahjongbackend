@@ -7,7 +7,7 @@ import com.mahjong.mahjongserver.domain.room.board.tile.TileClassification;
 
 import java.util.List;
 
-public class FrontAndBackMatcher implements ScoringPatternMatcher {
+public class LoSiuMatcher implements ScoringPatternMatcher {
 
     @Override
     public void match(ScoringContext scoringContext) {
@@ -22,7 +22,7 @@ public class FrontAndBackMatcher implements ScoringPatternMatcher {
                 Tile tile2 = group2.getFirst();
                 if (tile1.getTileType() == tile2.getTileType()
                         && tile1.getTileNum() == 1 && tile2.getTileNum() == 7) {
-                    scoringContext.addScoringPattern(ScoringPattern.FRONT_AND_BACK);
+                    scoringContext.addScoringPattern(ScoringPattern.LO_SIU);
                     return;
                 }
             }
@@ -42,7 +42,7 @@ public class FrontAndBackMatcher implements ScoringPatternMatcher {
 
                 if (tile1.getTileType() == tile2.getTileType()
                         && Math.abs(tile1.getTileNum() - tile2.getTileNum()) == 8) {
-                    scoringContext.addScoringPattern(ScoringPattern.FRONT_AND_BACK);
+                    scoringContext.addScoringPattern(ScoringPattern.LO_SIU);
                     break;
                 }
             }
