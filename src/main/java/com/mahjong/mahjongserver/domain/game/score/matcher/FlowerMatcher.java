@@ -17,17 +17,17 @@ public class FlowerMatcher implements ScoringPatternMatcher {
     );
 
     @Override
-    public void match(ScoringContext scoringContext) {
-        Set<Tile> flowers = scoringContext.getFlowers();
+    public void match(ScoringContext ctx) {
+        Set<Tile> flowers = ctx.getFlowers();
         int numFlowers = flowers.size();
 
         if (numFlowers == 0) {
-            scoringContext.addScoringPattern(ScoringPattern.NO_FLOWERS);
+            ctx.addScoringPattern(ScoringPattern.NO_FLOWERS);
             return;
         }
 
         if (numFlowers == 8) {
-            scoringContext.addScoringPattern(ScoringPattern.FLOWER_WIN);
+            ctx.addScoringPattern(ScoringPattern.FLOWER_WIN);
             return;
         }
 
@@ -35,10 +35,10 @@ public class FlowerMatcher implements ScoringPatternMatcher {
         boolean hasPlantSet = flowers.containsAll(PLANT_FLOWERS);
 
         if (hasSeasonSet) {
-            scoringContext.addScoringPattern(ScoringPattern.FLOWER_SET);
+            ctx.addScoringPattern(ScoringPattern.FLOWER_SET);
         }
         if (hasPlantSet) {
-            scoringContext.addScoringPattern(ScoringPattern.FLOWER_SET);
+            ctx.addScoringPattern(ScoringPattern.FLOWER_SET);
         }
 
         for (Tile flower : flowers) {
@@ -47,10 +47,10 @@ public class FlowerMatcher implements ScoringPatternMatcher {
                 continue; // skip GOOD/BAD scoring for flowers in completed sets
             }
 
-            if (flower.getTileNum() == scoringContext.getWinnerSeat().ordinal() + 1) {
-                scoringContext.addScoringPattern(ScoringPattern.MATCHING_FLOWER);
+            if (flower.getTileNum() == ctx.getWinnerSeat().ordinal() + 1) {
+                ctx.addScoringPattern(ScoringPattern.MATCHING_FLOWER);
             } else {
-                scoringContext.addScoringPattern(ScoringPattern.FLOWER);
+                ctx.addScoringPattern(ScoringPattern.FLOWER);
             }
         }
     }

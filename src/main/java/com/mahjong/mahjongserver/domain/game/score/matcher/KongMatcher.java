@@ -6,8 +6,8 @@ import com.mahjong.mahjongserver.domain.game.score.data.ScoringPattern;
 public class KongMatcher implements ScoringPatternMatcher {
 
     @Override
-    public void match(ScoringContext scoringContext) {
-        matchMeldedKong(scoringContext);
+    public void match(ScoringContext ctx) {
+        matchMeldedKong(ctx);
     }
 
     public void matchMeldedKong(ScoringContext scoringContext) {

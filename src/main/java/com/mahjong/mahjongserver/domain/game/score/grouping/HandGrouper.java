@@ -52,16 +52,19 @@ public class HandGrouper {
         if (numTiles == 2) {
             if (concealedTiles.get(0) == concealedTiles.get(1)
                     && (winningTile == null || concealedTiles.get(0) == winningTile)) {
-                // form the pair with last 2 tiles
                 List<Tile> pair = List.of(concealedTiles.get(0), concealedTiles.get(1));
-                builder.addConcealedGroup(pair);
 
-                boolean isWinningGroup = winningTile != null;
-                if (isWinningGroup) setWinningGroup(builder, pair, MeldType.PAIR);
-                groupings.add(new GroupedHand(builder)); // add new valid grouping
-                if (isWinningGroup) unsetWinningGroup(builder);
-
-                builder.backtrack();
+                if (winningTile == null) {
+                    // form pair with last two tiles
+                    builder.addConcealedGroup(pair);
+                    groupings.add(new GroupedHand(builder));
+                    builder.backtrack();
+                } else {
+                    // form pair and use as the winning group
+                    setWinningGroup(builder, pair, MeldType.PAIR);
+                    groupings.add(new GroupedHand(builder));
+                    unsetWinningGroup(builder);
+                }
             }
             return;
         }
@@ -86,7 +89,7 @@ public class HandGrouper {
                         MeldType type = HandChecker.checkGroupType(group);
                         if (type == null) continue;
 
-                        builder.addConcealedGroup(group);
+                        // recurse with the three used tiles removed
                         List<Tile> newConcealedTiles = new ArrayList<>(concealedTiles);
                         newConcealedTiles.remove(t1);
                         newConcealedTiles.remove(t2);
@@ -97,13 +100,12 @@ public class HandGrouper {
                             setWinningGroup(builder, group, type);
                             getRegularGroupings(groupings, newConcealedTiles, null, builder);
                             unsetWinningGroup(builder);
+                        } else {
+                            // option 2: use this group as non-winning group
+                            builder.addConcealedGroup(group);
+                            getRegularGroupings(groupings, newConcealedTiles, winningTile, builder);
+                            builder.backtrack();
                         }
-
-                        // option 2: use this group but not as winning group
-                        getRegularGroupings(groupings, newConcealedTiles, winningTile, builder);
-
-                        // backtrack
-                        builder.backtrack();
                     }
                 }
             }

@@ -45,18 +45,23 @@ public class TaiwaneseSixteenScoreCalculator implements ScoreCalculator {
 //============================== SCORES ==============================//
 
     private static final List<ScoringPatternMatcher> matchers = List.of(
-            new GeneralMatcher(),
             new FlowerMatcher(),
-            new WindMatcher(),
-            new DragonMatcher(),
-            new AllSheungsMatcher(),
-            new LoSiuMatcher()
+            new GeneralMatcher(),
+
+            new KongMatcher(),
+            new WindTileMatcher(),
+            new DragonTileMatcher(),
+            new SuitsMatcher(),
+
+            new LoSiuMatcher(),
+            new SheungsMatcher(),
+            new PongsMatcher(),
+            new ConcealedPongsMatcher(),
+            new AllMeldedMatcher(),
+            new WondersMatcher()
     );
 
     private void calculateScoreForGrouping(ScoringContext scoringContext) {
-        // get groupings
-        GroupedHand groupedHand = scoringContext.getGroupedHand();
-
         // accumulate scoring patterns inside scoringContext
         for (ScoringPatternMatcher matcher : matchers) {
             matcher.match(scoringContext);

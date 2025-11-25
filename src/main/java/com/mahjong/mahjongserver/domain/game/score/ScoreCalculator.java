@@ -1160,7 +1160,7 @@ public interface ScoreCalculator {
 //        } else if (numUnrevealedTiles <= 11) {
 //            points.add(Score.FIVE_DISCARDS_LEFT);
 //        } else if (numUnrevealedTiles <= 14) {
-//            points.add(Score.TEN_DISCARDS_LEFT);
+//            points.add(Score.TEN_REMAINING_TILES);
 //        }
 //
 //

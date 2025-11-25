@@ -4,6 +4,7 @@ import com.mahjong.mahjongserver.domain.game.Game;
 import com.mahjong.mahjongserver.domain.game.GameAction;
 import com.mahjong.mahjongserver.domain.game.claim.ClaimOption;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
+import com.mahjong.mahjongserver.domain.game.score.data.ScoringPattern;
 import com.mahjong.mahjongserver.domain.player.decision.Decision;
 import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
@@ -31,13 +32,14 @@ public class DTOMapper {
         );
     }
 
-    public static TableDTO fromTable(Table table, Seat selfSeat) {
+    public static TableDTO fromTable(Table table, Seat selfSeat, long tableVersion) {
         Map<Seat, HandDTO> handDTOs = new EnumMap<>(Seat.class);
         for (Seat seat : Seat.values()) {
             handDTOs.put(seat, fromHand(table.getHand(seat), seat == null || seat == selfSeat));
         }
 
         return new TableDTO(
+                tableVersion,
                 table.getBoard().getDiscardPile(),
                 table.getBoard().getDrawPileSize(),
                 selfSeat,
@@ -47,16 +49,24 @@ public class DTOMapper {
 
     public static ScoringContextDTO fromScoringContext(ScoringContext scoringContext) {
         List<List<Tile>> concealedMelds = new ArrayList<>(scoringContext.getConcealedMelds());
-        concealedMelds.addAll(scoringContext.getPairs());
+        concealedMelds.addAll(scoringContext.getConcealedPairs());
 
         return new ScoringContextDTO(
-                scoringContext.getScoringPatterns(),
+                scoringContext.getScoringPatterns().stream().map(DTOMapper::fromScoringPattern).toList(),
                 scoringContext.getFlowers(),
                 scoringContext.getRevealedMelds(),
                 concealedMelds,
                 scoringContext.getWinningGroup(),
                 scoringContext.getWinningTile()
         );
+    }
+
+    public static ScoringPatternDTO fromScoringPattern(ScoringPattern scoringPattern) {
+        return new ScoringPatternDTO(
+                scoringPattern.name(),
+                scoringPattern.getName(),
+                scoringPattern.getDescription(),
+                scoringPattern.getValue());
     }
 
     public static RoomInfoDTO fromRoom(Room room) {
@@ -69,8 +79,8 @@ public class DTOMapper {
         );
     }
 
-    public static GameStateDTO fromGame(Game game, Seat seat) {
-        TableDTO tableDTO = fromTable(game.getTable(), seat);
+    public static GameStateDTO fromGame(Game game, Seat seat, long gameStateVersion, long tableVersion) {
+        TableDTO tableDTO = fromTable(game.getTable(), seat, tableVersion);
 
         // determine if the player has a drawn tile
         Tile drawnTile = null;
@@ -103,6 +113,7 @@ public class DTOMapper {
         }
 
         return new GameStateDTO(
+                gameStateVersion,
                 tableDTO,
                 game.getCurrentSeat(),
                 game.getWindSeat(),

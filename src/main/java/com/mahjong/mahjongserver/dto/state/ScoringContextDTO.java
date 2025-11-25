@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 public record ScoringContextDTO(
-        List<ScoringPattern> scoringPatterns,
+        List<ScoringPatternDTO> scoringPatterns,
 
         Set<Tile> flowers,
         List<List<Tile>> revealedGroups,

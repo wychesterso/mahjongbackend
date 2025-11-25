@@ -10,6 +10,7 @@ import java.util.Set;
 
 public class GroupedHand {
     private Set<Tile> flowers;
+    private final List<List<Tile>> revealedPairs = new ArrayList<>();
     private List<List<Tile>> revealedSheungs;
     private List<List<Tile>> revealedPongs;
     private List<List<Tile>> brightKongs;
@@ -62,6 +63,10 @@ public class GroupedHand {
 
     public List<List<Tile>> getConcealedPairs() {
         return concealedPairs;
+    }
+
+    public List<List<Tile>> getRevealedPairs() {
+        return revealedPairs;
     }
 
     public List<List<Tile>> getConcealedSheungs() {

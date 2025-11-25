@@ -46,6 +46,10 @@ public class Game {
     // win info
     private Tile winningTile = null;
 
+    // game state
+    private long gameStateVersion = 0;
+    private long tableVersion = 0;
+
     public Game(Room room, Seat windSeat) {
         this.room = room;
         this.windSeat = windSeat;
@@ -104,9 +108,21 @@ public class Game {
         return numDraws;
     }
 
-    public Tile getWinningTile() { return winningTile; }
+    public Tile getWinningTile() {
+        return winningTile;
+    }
 
-    public boolean isAwaitingDiscard() { return awaitingDiscard; }
+    public boolean isAwaitingDiscard() {
+        return awaitingDiscard;
+    }
+
+    public long getAndIncrementGameStateVersion() {
+        return gameStateVersion++;
+    }
+
+    public long getAndIncrementTableVersion() {
+        return tableVersion++;
+    }
 
     //============================== EVENTS ==============================//
 
@@ -334,7 +350,7 @@ public class Game {
         PlayerContext ctx = room.getPlayerContext(claimee);
         ctx.getDecisionHandler().promptDecisionOnDraw(
                 ctx,
-                DTOMapper.fromTable(table, claimee),
+                DTOMapper.fromTable(table, claimee, tableVersion++),
                 drawnTile,
                 availableOptions
         );
@@ -347,7 +363,7 @@ public class Game {
         PlayerContext ctx = room.getPlayerContext(claimee);
         ctx.getDecisionHandler().promptDecisionOnDiscard(
                 ctx,
-                DTOMapper.fromTable(table, claimee),
+                DTOMapper.fromTable(table, claimee, tableVersion++),
                 discardedTile,
                 discarder,
                 availableOptions,
@@ -387,7 +403,7 @@ public class Game {
             PlayerContext ctx = room.getPlayerContext(seat);
             room.getGameEventPublisher().sendTableUpdate(
                     ctx.getPlayer().getId(),
-                    DTOMapper.fromGame(this, seat)
+                    DTOMapper.fromGame(this, seat, gameStateVersion++, tableVersion++)
             );
         }
     }
@@ -591,7 +607,7 @@ public class Game {
 
         room.getGameEventPublisher().sendGameEnd(
                 room.getRoomId(),
-                new EndGameDTO(GameResult.DRAW, Map.of(), Set.of(), DTOMapper.fromTable(table, null))
+                new EndGameDTO(GameResult.DRAW, Map.of(), Set.of(), DTOMapper.fromTable(table, null, tableVersion++))
         );
 
         room.onGameEnd();
@@ -622,7 +638,7 @@ public class Game {
 
         room.getGameEventPublisher().sendGameEnd(
                 room.getRoomId(),
-                new EndGameDTO(GameResult.WIN, winners, loserSeats, DTOMapper.fromTable(table, null))
+                new EndGameDTO(GameResult.WIN, winners, loserSeats, DTOMapper.fromTable(table, null, tableVersion++))
         );
 
         room.onGameEnd();
@@ -635,7 +651,7 @@ public class Game {
     }
 
     private TableDTO fromTable() {
-        return DTOMapper.fromTable(table, currentSeat);
+        return DTOMapper.fromTable(table, currentSeat, tableVersion++);
     }
 
     private int decisionPriority(Decision d) {

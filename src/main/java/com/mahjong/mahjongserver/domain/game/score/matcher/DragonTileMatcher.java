@@ -7,12 +7,12 @@ import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DragonMatcher implements ScoringPatternMatcher {
+public class DragonTileMatcher implements ScoringPatternMatcher {
 
     @Override
-    public void match(ScoringContext scoringContext) {
+    public void match(ScoringContext ctx) {
         List<ScoringPattern> dragonPoints = new ArrayList<>();
-        for (List<Tile> group : scoringContext.getAllPongsAndKongs()) {
+        for (List<Tile> group : ctx.getAllPongsAndKongs()) {
             if (group.getFirst() == Tile.RED_DRAGON) {
                 dragonPoints.add(ScoringPattern.RED_DRAGON);
             } else if (group.getFirst() == Tile.GREEN_DRAGON) {
@@ -23,20 +23,20 @@ public class DragonMatcher implements ScoringPatternMatcher {
         }
 
         int dragonPongCount = dragonPoints.size();
-        boolean pairIsDragon = scoringContext.getPair() != null &&
-                scoringContext.getPairTile() != null &&
-                isDragon(scoringContext.getPairTile());
+        boolean pairIsDragon = ctx.getPair() != null &&
+                ctx.getPairTile() != null &&
+                isDragon(ctx.getPairTile());
 
         if (dragonPongCount == 3) {
-            scoringContext.addScoringPattern(ScoringPattern.BIG_THREE_DRAGONS);
+            ctx.addScoringPattern(ScoringPattern.BIG_THREE_DRAGONS);
         } else if (dragonPongCount == 2) {
             if (pairIsDragon) {
-                scoringContext.addScoringPattern(ScoringPattern.LITTLE_THREE_DRAGONS);
+                ctx.addScoringPattern(ScoringPattern.LITTLE_THREE_DRAGONS);
             } else {
-                scoringContext.addScoringPatterns(dragonPoints);
+                ctx.addScoringPatterns(dragonPoints);
             }
         } else {
-            scoringContext.addScoringPatterns(dragonPoints);
+            ctx.addScoringPatterns(dragonPoints);
         }
     }
 

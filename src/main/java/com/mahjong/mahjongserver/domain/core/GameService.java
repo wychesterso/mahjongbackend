@@ -1,5 +1,6 @@
 package com.mahjong.mahjongserver.domain.core;
 
+import com.mahjong.mahjongserver.domain.game.Game;
 import com.mahjong.mahjongserver.domain.player.Player;
 import com.mahjong.mahjongserver.domain.player.decision.Decision;
 import com.mahjong.mahjongserver.domain.room.Room;
@@ -48,12 +49,13 @@ public class GameService {
 
     public GameStateDTO getGameState(String roomId, String playerId) {
         Room room = roomManager.getRoom(roomId);
+        Game game = room.getCurrentGame();
 
-        if (room.getCurrentGame() == null || !room.getCurrentGame().isActiveGame()) {
+        if (game == null || !game.isActiveGame()) {
             throw new IllegalStateException("No active game in this room.");
         }
 
-        // Determine the requesting seat
+        // determine the requesting seat
         Seat selfSeat = null;
         for (Seat seat : Seat.values()) {
             Player player = room.getPlayerContext(seat).getPlayer();
@@ -67,7 +69,7 @@ public class GameService {
             throw new AccessDeniedException("You are not a player in this room.");
         }
 
-        return DTOMapper.fromGame(room.getCurrentGame(), selfSeat);
+        return DTOMapper.fromGame(game, selfSeat, game.getAndIncrementGameStateVersion(), game.getAndIncrementTableVersion());
     }
 
     /**

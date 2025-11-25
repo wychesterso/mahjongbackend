@@ -4,10 +4,9 @@ import com.mahjong.mahjongserver.domain.game.Game;
 import com.mahjong.mahjongserver.domain.game.score.grouping.GroupedHand;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
+import com.mahjong.mahjongserver.domain.room.board.tile.TileType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class ScoringContext {
 
@@ -15,10 +14,12 @@ public class ScoringContext {
 
     private final Game game;
     private final Seat winnerSeat;
-    private GroupedHand groupedHand = null;
+    private final boolean isSelfDraw;
+    private final GroupedHand groupedHand;
 
     // preprocessed groupings
 
+    private final List<List<Tile>> pairs = new ArrayList<>();
     private final List<List<Tile>> sheungs = new ArrayList<>();
     private final List<List<Tile>> pongs = new ArrayList<>();
     private final List<List<Tile>> kongs = new ArrayList<>();
@@ -52,15 +53,43 @@ public class ScoringContext {
     public ScoringContext(Game game, Seat winnerSeat, GroupedHand groupedHand) {
         this.game = game;
         this.winnerSeat = winnerSeat;
+        this.isSelfDraw = winnerSeat == game.getCurrentSeat();
         this.groupedHand = groupedHand;
 
+        preprocessWinningGroup();
         preprocessGroups();
         preprocessSuits();
     }
 
     // ============================== PREPROCESSING ==============================
 
+    private void preprocessWinningGroup() {
+        List<Tile> winningGroup = groupedHand.getWinningGroup();
+        if (isSelfDraw) {
+            // stuff the group into concealed groups
+            switch (groupedHand.getWinningGroupType()) {
+                case PAIR -> {groupedHand.getConcealedPairs().add(winningGroup);}
+                case SHEUNG -> {groupedHand.getConcealedSheungs().add(winningGroup);}
+                case PONG -> {groupedHand.getConcealedPongs().add(winningGroup);}
+                // case KONG -> {groupedHand.getDarkKongs().add(winningGroup);}
+                case OTHER -> {groupedHand.getWeirdGroups().add(winningGroup);}
+            }
+        } else {
+            // stuff the group into revealed groups
+            switch (groupedHand.getWinningGroupType()) {
+                case PAIR -> {groupedHand.getRevealedPairs().add(winningGroup);}
+                case SHEUNG -> {groupedHand.getRevealedSheungs().add(winningGroup);}
+                case PONG -> {groupedHand.getRevealedPongs().add(winningGroup);}
+                // case KONG -> {groupedHand.getBrightKongs().add(winningGroup);}
+                case OTHER -> {groupedHand.getWeirdGroups().add(winningGroup);}
+            }
+        }
+    }
+
     private void preprocessGroups() {
+        pairs.addAll(groupedHand.getConcealedPairs());
+        pairs.addAll(groupedHand.getRevealedPairs());
+
         sheungs.addAll(groupedHand.getConcealedSheungs());
         sheungs.addAll(groupedHand.getRevealedSheungs());
 
@@ -90,6 +119,9 @@ public class ScoringContext {
 
     private void preprocessSuits() {
         for (List<Tile> group : groupedHand.getConcealedPairs()) {
+            preprocessGroupInSuit(group);
+        }
+        for (List<Tile> group : groupedHand.getRevealedPairs()) {
             preprocessGroupInSuit(group);
         }
         for (List<Tile> group : groupedHand.getConcealedSheungs()) {
@@ -140,7 +172,7 @@ public class ScoringContext {
     }
 
     public boolean isSelfDraw() {
-        return getWinnerSeat() == getLoserSeat();
+        return isSelfDraw;
     }
 
     public Seat getWindSeat() {
@@ -161,8 +193,16 @@ public class ScoringContext {
 
     // ============================== COUNTS ==============================
 
-    public int numPairs() {
+    public int numConcealedPairs() {
         return getConcealedPairs().size();
+    }
+
+    public int numRevealedPairs() {
+        return getRevealedPairs().size();
+    }
+
+    public int numPairs() {
+        return getPairs().size();
     }
 
     public int numConcealedSheungs() {
@@ -201,8 +241,24 @@ public class ScoringContext {
         return kongs.size();
     }
 
+    public int numConcealedPongsAndKongs() {
+        return concealedPongsAndKongs.size();
+    }
+
+    public int numRevealedPongsAndKongs() {
+        return revealedPongsAndKongs.size();
+    }
+
     public int numPongsAndKongs() {
         return pongsAndKongs.size();
+    }
+
+    public int numConcealedMelds() {
+        return concealedMelds.size();
+    }
+
+    public int numRevealedMelds() {
+        return revealedMelds.size();
     }
 
     // ============================== GROUPINGS ==============================
@@ -220,7 +276,7 @@ public class ScoringContext {
     }
 
     public List<List<Tile>> getPairs() {
-        return groupedHand.getConcealedPairs();
+        return pairs;
     }
 
     /**
@@ -238,8 +294,8 @@ public class ScoringContext {
      * @return the tile pair.
      */
     public List<Tile> getPair() {
-        if (getConcealedPairs().isEmpty()) return null;
-        return getConcealedPairs().getFirst();
+        if (getPairs().isEmpty()) return null;
+        return getPairs().getFirst();
     }
 
     public Set<Tile> getFlowers() {
@@ -248,6 +304,10 @@ public class ScoringContext {
 
     public List<List<Tile>> getConcealedPairs() {
         return groupedHand.getConcealedPairs();
+    }
+
+    public List<List<Tile>> getRevealedPairs() {
+        return groupedHand.getRevealedPairs();
     }
 
     public List<List<Tile>> getConcealedSheungs() {
@@ -368,18 +428,78 @@ public class ScoringContext {
         return getWords().size();
     }
 
+    public boolean hasCircles() {
+        return numCircleGroups() != 0;
+    }
+
+    public boolean hasBamboos() {
+        return numBambooGroups() != 0;
+    }
+
+    public boolean hasMillions() {
+        return numMillionGroups() != 0;
+    }
+
+    public boolean hasNumberTiles() {
+        return numNumberTileGroups() != 0;
+    }
+
+    public boolean hasWinds() {
+        return numWindGroups() != 0;
+    }
+
+    public boolean hasDragons() {
+        return numDragonGroups() != 0;
+    }
+
+    public boolean hasWords() {
+        return numWordGroups() != 0;
+    }
+
+    public boolean hasFlowers() {
+        return !groupedHand.getFlowers().isEmpty();
+    }
+
+    public boolean hasSeasonFlower() {
+        return groupedHand.getFlowers().stream().anyMatch(a -> a.getTileType() == TileType.SEASON);
+    }
+
+    public boolean hasPlantFlower() {
+        return groupedHand.getFlowers().stream().anyMatch(a -> a.getTileType() == TileType.PLANT);
+    }
+
     // ============================== SCORING LOG ==============================
 
     public List<ScoringPattern> getScoringPatterns() {
         return scoringPatterns;
     }
 
-    public void addScoringPattern(ScoringPattern scoringPattern) {
-        scoringPatterns.add(scoringPattern);
+    public boolean containsScoringPattern(ScoringPattern pattern) {
+        return scoringPatterns.contains(pattern);
     }
 
-    public void addScoringPatterns(List<ScoringPattern> scoringPatterns) {
-        this.scoringPatterns.addAll(scoringPatterns);
+    public boolean containsScoringPatterns(Collection<ScoringPattern> patterns) {
+        return new HashSet<>(scoringPatterns).containsAll(patterns);
+    }
+
+    public void addScoringPattern(ScoringPattern pattern) {
+        scoringPatterns.add(pattern);
+    }
+
+    public void addScoringPatterns(Collection<ScoringPattern> patterns) {
+        scoringPatterns.addAll(patterns);
+    }
+
+    public boolean ifExistsThenRemoveScoringPattern(ScoringPattern pattern) {
+        if (containsScoringPattern(pattern)) {
+            removeScoringPattern(pattern);
+            return true;
+        }
+        return false;
+    }
+
+    public void removeScoringPattern(ScoringPattern pattern) {
+        scoringPatterns.remove(pattern);
     }
 
     public int getScore() {

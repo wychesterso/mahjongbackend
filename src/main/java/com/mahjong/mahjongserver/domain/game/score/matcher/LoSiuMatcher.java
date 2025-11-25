@@ -10,9 +10,9 @@ import java.util.List;
 public class LoSiuMatcher implements ScoringPatternMatcher {
 
     @Override
-    public void match(ScoringContext scoringContext) {
-        List<List<Tile>> sheungs = scoringContext.getAllSheungs();
-        int numSheungs = scoringContext.getAllSheungs().size();
+    public void match(ScoringContext ctx) {
+        List<List<Tile>> sheungs = ctx.getAllSheungs();
+        int numSheungs = ctx.numSheungs();
         
         for (int i = 0; i < numSheungs; i++) {
             for (int j = i + 1; j < numSheungs; j++) {
@@ -22,13 +22,13 @@ public class LoSiuMatcher implements ScoringPatternMatcher {
                 Tile tile2 = group2.getFirst();
                 if (tile1.getTileType() == tile2.getTileType()
                         && tile1.getTileNum() == 1 && tile2.getTileNum() == 7) {
-                    scoringContext.addScoringPattern(ScoringPattern.LO_SIU);
+                    ctx.addScoringPattern(ScoringPattern.LO_SIU);
                     return;
                 }
             }
         }
 
-        List<List<Tile>> pongsAndKongs = scoringContext.getAllPongsAndKongs();
+        List<List<Tile>> pongsAndKongs = ctx.getAllPongsAndKongs();
         int numPongsAndKongs = pongsAndKongs.size();
 
         for (int i = 0; i < numPongsAndKongs; i++) {
@@ -42,7 +42,7 @@ public class LoSiuMatcher implements ScoringPatternMatcher {
 
                 if (tile1.getTileType() == tile2.getTileType()
                         && Math.abs(tile1.getTileNum() - tile2.getTileNum()) == 8) {
-                    scoringContext.addScoringPattern(ScoringPattern.LO_SIU);
+                    ctx.addScoringPattern(ScoringPattern.LO_SIU);
                     break;
                 }
             }

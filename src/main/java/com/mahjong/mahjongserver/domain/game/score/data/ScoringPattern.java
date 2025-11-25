@@ -39,7 +39,7 @@ public enum ScoringPattern {
     ALL_CONCEALED("門前清", "Entire hand concealed", 3),
 
     TWO_CONCEALED_PONGS("二暗刻", "Exactly two of concealed Pongs + Kongs", 3),
-    TWO_IDENTICAL_SHEUNGS("一般高", "Two identical Sheungs", 3),
+    TWO_IDENTICAL_SHEUNGS("一般高", "Two identical Sheungs of same sequence and suit", 3),
     TWO_BROTHERS("二兄弟", "Two Pongs/Kongs of same number", 3),
 
     // ==================== FIVE POINT PATTERNS ====================
@@ -59,7 +59,7 @@ public enum ScoringPattern {
     // ==================== TEN POINT PATTERNS ====================
     MULTIPLE_WINNERS("雙響", "Multiple winners", 10),
     FLOWER_SET("一台花", "Four flower tiles of the same type", 10),
-    TEN_DISCARDS_LEFT("十只內", "Win with ten or less tiles to discard", 10),
+    TEN_REMAINING_TILES("十只內", "Win with ten or less tiles in the wall", 10),
     CHICKEN_HAND("雞糊", "Chicken Hand", 10),
     ALL_SHEUNGS_NO_WORDS_OR_FLOWERS("大平糊", "No word or flower tiles, all groups are Sheungs", 10),
     SEVEN_SUITS("七門齊", "Contains all of Tung, Sok, Maan, Wind, Dragon, and both flower types", 10),
@@ -73,7 +73,7 @@ public enum ScoringPattern {
     ALL_USING_WONDERS("全帶混么", "Every group/pair has 1, 9, or word tiles", 10),
 
     // ==================== FIFTEEN POINT PATTERNS ====================
-    THREE_IDENTICAL_SHEUNGS("三般高", "Three identical Sheungs", 15),
+    THREE_IDENTICAL_SHEUNGS("三般高", "Three identical Sheungs of same sequence and suit", 15),
     BIG_THREE_BROTHERS("大三兄弟", "Three Pongs/Kongs of same number", 15),
     BIG_THREE_SISTERS("大三姊妹", "Three Pongs/Kongs of same type and adjacent numbers", 15),
 
@@ -84,7 +84,7 @@ public enum ScoringPattern {
     LITTLE_THREE_WINDS("小三風", "Contains two Pongs/Kongs and one pair of the four Wind tiles", 15),
 
     // ==================== TWENTY POINT PATTERNS ====================
-    FIVE_DISCARDS_LEFT("五只內", "Win with five or less tiles to discard", 20),
+    FIVE_REMAINING_TILES("五只內", "Win with five or less tiles in the wall", 20),
     WIN_ON_LAST_DRAW("海底撈月", "Win on last tile draw", 20),
 
     FOUR_TILES_FOUR_GROUPS("四歸四", "Four identical tiles used in four different groups", 20),

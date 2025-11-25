@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 public record TableDTO(
+        long tableVersion,
         List<Tile> discardPile,
         int drawPileSize,
         Seat selfSeat,

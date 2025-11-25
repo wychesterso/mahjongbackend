@@ -8,15 +8,15 @@ import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WindMatcher implements ScoringPatternMatcher {
+public class WindTileMatcher implements ScoringPatternMatcher {
 
     @Override
-    public void match(ScoringContext scoringContext) {
+    public void match(ScoringContext ctx) {
         List<ScoringPattern> windPoints = new ArrayList<>();
-        Seat playerSeat = scoringContext.getWinnerSeat();
-        Seat prevailingWind = scoringContext.getWindSeat();
+        Seat playerSeat = ctx.getWinnerSeat();
+        Seat prevailingWind = ctx.getWindSeat();
 
-        for (List<Tile> group : scoringContext.getAllPongsAndKongs()) {
+        for (List<Tile> group : ctx.getAllPongsAndKongs()) {
             Tile first = group.getFirst();
             if (isWind(first)) {
                 ScoringPattern windPattern = getWindPattern(first);
@@ -35,26 +35,26 @@ public class WindMatcher implements ScoringPatternMatcher {
         }
 
         int windPongCount = windPoints.size();
-        boolean pairIsWind = scoringContext.getPair() != null &&
-                scoringContext.getPairTile() != null &&
-                isWind(scoringContext.getPairTile());
+        boolean pairIsWind = ctx.getPair() != null &&
+                ctx.getPairTile() != null &&
+                isWind(ctx.getPairTile());
 
         if (windPongCount == 4) {
-            scoringContext.addScoringPattern(ScoringPattern.BIG_FOUR_WINDS); // 大四喜
+            ctx.addScoringPattern(ScoringPattern.BIG_FOUR_WINDS); // 大四喜
         } else if (windPongCount == 3) {
             if (pairIsWind) {
-                scoringContext.addScoringPattern(ScoringPattern.LITTLE_FOUR_WINDS); // 小四喜
+                ctx.addScoringPattern(ScoringPattern.LITTLE_FOUR_WINDS); // 小四喜
             } else {
-                scoringContext.addScoringPattern(ScoringPattern.BIG_THREE_WINDS); // 大三風
+                ctx.addScoringPattern(ScoringPattern.BIG_THREE_WINDS); // 大三風
             }
         } else if (windPongCount == 2) {
             if (pairIsWind) {
-                scoringContext.addScoringPattern(ScoringPattern.LITTLE_THREE_WINDS); // 小三風
+                ctx.addScoringPattern(ScoringPattern.LITTLE_THREE_WINDS); // 小三風
             } else {
-                scoringContext.addScoringPatterns(windPoints);
+                ctx.addScoringPatterns(windPoints);
             }
         } else {
-            scoringContext.addScoringPatterns(windPoints);
+            ctx.addScoringPatterns(windPoints);
         }
     }
 
