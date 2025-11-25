@@ -48,14 +48,11 @@ public class DTOMapper {
     }
 
     public static ScoringContextDTO fromScoringContext(ScoringContext scoringContext) {
-        List<List<Tile>> concealedMelds = new ArrayList<>(scoringContext.getConcealedMelds());
-        concealedMelds.addAll(scoringContext.getConcealedPairs());
-
         return new ScoringContextDTO(
                 scoringContext.getScoringPatterns().stream().map(DTOMapper::fromScoringPattern).toList(),
                 scoringContext.getFlowers(),
-                scoringContext.getRevealedMelds(),
-                concealedMelds,
+                scoringContext.getRevealedGroups(),
+                scoringContext.getConcealedGroups(),
                 scoringContext.getWinningGroup(),
                 scoringContext.getWinningTile()
         );

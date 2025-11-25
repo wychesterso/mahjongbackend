@@ -370,6 +370,18 @@ public class ScoringContext {
         return melds;
     }
 
+    public List<List<Tile>> getRevealedGroups() {
+        List<List<Tile>> result = new ArrayList<>(revealedMelds);
+        result.addAll(getRevealedPairs());
+        return result;
+    }
+
+    public List<List<Tile>> getConcealedGroups() {
+        List<List<Tile>> result = new ArrayList<>(concealedMelds);
+        result.addAll(getConcealedPairs());
+        return result;
+    }
+
     // ============================== SUITS ==============================
 
     public List<List<Tile>> getCircles() {
