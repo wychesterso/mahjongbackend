@@ -5,16 +5,17 @@ import com.mahjong.mahjongserver.domain.room.board.Hand;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 public class GroupedHand {
-    private Set<Tile> flowers;
+    private final Set<Tile> flowers = new HashSet<>();
     private final List<List<Tile>> revealedPairs = new ArrayList<>();
-    private List<List<Tile>> revealedSheungs;
-    private List<List<Tile>> revealedPongs;
-    private List<List<Tile>> brightKongs;
-    private List<List<Tile>> darkKongs;
+    private final List<List<Tile>> revealedSheungs = new ArrayList<>();
+    private final List<List<Tile>> revealedPongs = new ArrayList<>();
+    private final List<List<Tile>> brightKongs = new ArrayList<>();
+    private final List<List<Tile>> darkKongs = new ArrayList<>();
 
     private final List<List<Tile>> concealedPairs = new ArrayList<>();
     private final List<List<Tile>> concealedSheungs = new ArrayList<>();
@@ -50,11 +51,11 @@ public class GroupedHand {
     }
 
     public void populateRevealedTiles(Hand hand) {
-        flowers = hand.getFlowers();
-        revealedSheungs = hand.getSheungs();
-        revealedPongs = hand.getPongs();
-        brightKongs = hand.getBrightKongs();
-        darkKongs = hand.getDarkKongs();
+        flowers.addAll(hand.getFlowers());
+        revealedSheungs.addAll(hand.getSheungs());
+        revealedPongs.addAll(hand.getPongs());
+        brightKongs.addAll(hand.getBrightKongs());
+        darkKongs.addAll(hand.getDarkKongs());
     }
 
     public Set<Tile> getFlowers() {
