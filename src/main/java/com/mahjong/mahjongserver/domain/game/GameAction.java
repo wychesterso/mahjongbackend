@@ -2,6 +2,11 @@ package com.mahjong.mahjongserver.domain.game;
 
 public enum GameAction {
     DRAW,
-    NO_DRAW,
+    DISCARD,
+    FLOWER,
+    SHEUNG,
+    PONG,
+    KONG,
+    ROBBING_KONG,
     OTHER
 }

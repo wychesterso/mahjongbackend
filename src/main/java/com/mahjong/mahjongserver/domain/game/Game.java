@@ -30,15 +30,18 @@ public class Game {
     private final Seat windSeat;
     private final Seat zhongSeat;
     private Seat currentSeat;
+
     private GameAction currentAction = GameAction.OTHER;
+    private final Stack<GameAction> actions = new Stack<>();
 
     // game statistics and scoring
     private final List<Seat> winnerSeats = new ArrayList<>();
     private int numDraws = 0;
+    private int numDiscards = 0;
 
     // prompting and frontend player-interaction stuff
     private final Room room;
-    private Map<Seat, List<ClaimOption>> expectedClaims = new EnumMap<>(Seat.class);
+    private final Map<Seat, List<ClaimOption>> expectedClaims = new EnumMap<>(Seat.class);
     private final Map<Seat, ClaimResolution> claimResponses = new HashMap<>();
     private static final long TIMEOUT_MILLIS = 10_000;
     private boolean awaitingDiscard = false;
@@ -96,6 +99,15 @@ public class Game {
 
     public GameAction getCurrentAction() { return currentAction; }
 
+    public void setCurrentAction(GameAction gameAction) {
+        actions.add(gameAction);
+        currentAction = gameAction;
+    }
+
+    public Stack<GameAction> getActions() {
+        return actions;
+    }
+
     public List<Seat> getWinnerSeats() {
         return winnerSeats;
     }
@@ -106,6 +118,10 @@ public class Game {
 
     public int getNumDraws() {
         return numDraws;
+    }
+
+    public int getNumDiscards() {
+        return numDiscards;
     }
 
     public Tile getWinningTile() {
@@ -154,7 +170,6 @@ public class Game {
     public void startTurnWithoutDraw() {
         System.out.println("[Game] startTurnWithoutDraw(): room=" + room.getRoomId() + ", currentSeat=" + currentSeat);
         resetClaims();
-        currentAction = GameAction.NO_DRAW;
         updateTableState();
         promptDiscard();
     }
@@ -162,7 +177,7 @@ public class Game {
     public void startTurnWithDraw() {
         System.out.println("[Game] startTurnWithDraw(): room=" + room.getRoomId() + ", currentSeat=" + currentSeat);
         resetClaims();
-        currentAction = GameAction.DRAW;
+        setCurrentAction(GameAction.DRAW);
 
         // draw tile
         Hand hand = table.getHand(currentSeat);
@@ -182,7 +197,7 @@ public class Game {
 
     public void startTurnWithBonusDraw() {
         resetClaims();
-        currentAction = GameAction.DRAW;
+        setCurrentAction(GameAction.DRAW);
 
         // draw tile
         Hand hand = table.getHand(currentSeat);
@@ -215,7 +230,10 @@ public class Game {
         if (tile == null) return null; // drawPile exhausted, end game
 
         while (tile.getTileType().getClassification() == TileClassification.FLOWER) {
+            setCurrentAction(GameAction.FLOWER);
             hand.addFlower(tile);
+
+            setCurrentAction(GameAction.DRAW);
             tile = getBoard().drawBonusTile();
             if (tile == null) return null;
         }
@@ -489,16 +507,19 @@ public class Game {
             switch (decision) {
                 case BRIGHT_KONG -> {
                     hand.performBrightKongFromDiscard(claimedTile);
+                    setCurrentAction(GameAction.KONG);
                     currentSeat = claimer;
                     startTurnWithBonusDraw();
                 }
                 case PONG -> {
                     hand.performPong(claimedTile);
+                    setCurrentAction(GameAction.PONG);
                     currentSeat = claimer;
                     startTurnWithoutDraw();
                 }
                 case SHEUNG -> {
                     hand.performSheung(claimedTile, sheungCombo);
+                    setCurrentAction(GameAction.SHEUNG);
                     currentSeat = claimer;
                     startTurnWithoutDraw();
                 }
@@ -525,8 +546,6 @@ public class Game {
             return;
         }
 
-        awaitingDiscard = false;
-        currentAction = GameAction.NO_DRAW;
         System.out.println("[Game] Received discard request, room=" + room.getRoomId() + ", seat=" + playerSeat + ", discardedTile=" + discardedTile);
 
         // 2. remove tile from hand and update discard pile
@@ -536,6 +555,11 @@ public class Game {
             System.out.println("[Game] Attempting to discard nonexistent tile, room=" + room.getRoomId() + ", seat=" + playerSeat + ", discardedTile=" + discardedTile);
             return;
         }
+
+        awaitingDiscard = false;
+        setCurrentAction(GameAction.DISCARD);
+        numDiscards++;
+
         room.getTimeoutScheduler().cancel("discard:" + player.getId());
         getBoard().putInDiscardPile(discardedTile);
 
@@ -580,12 +604,14 @@ public class Game {
             case DARK_KONG -> {
                 Tile kongTile = hand.getLastDrawnTile();
                 hand.performDarkKong(kongTile);
+                setCurrentAction(GameAction.KONG);
                 startTurnWithBonusDraw();
             }
             case BRIGHT_KONG -> {
                 // promote pong into kong
                 Tile kongTile = hand.getLastDrawnTile();
                 hand.performBrightKongFromDraw(kongTile);
+                setCurrentAction(GameAction.KONG);
                 startTurnWithBonusDraw();
             }
             case PASS -> {

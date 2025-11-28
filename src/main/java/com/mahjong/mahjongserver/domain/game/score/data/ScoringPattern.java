@@ -19,7 +19,7 @@ public enum ScoringPattern {
     NORTH_WIND("北風", "North Wind", 1),
 
     WAIT_ON_TWO_PAIRS("對碰", "Waiting on two different tiles to match two different pairs", 1),
-    SINGLE_WAIT_ON_TWO_MELDS("假獨", "Waiting on a single tile fitting multiple pairs", 1),
+    FAKE_SINGLE_WAIT("假獨", "Waiting on a single tile in the current grouping, but actually waiting on more than one tile", 1),
     GOOD_PAIR("將眼", "Pair is 2, 5 or 8", 1),
 
     // ==================== TWO POINT PATTERNS ====================
@@ -94,7 +94,6 @@ public enum ScoringPattern {
 
     // ==================== THIRTY POINT PATTERNS ====================
     SELF_DRAW_AFTER_TWO_KONGS("摃上摃自摸", "Self-Draw after two consecutive Kongs", 30),
-    SELF_DRAW_AFTER_ROBBING_KONG_AND_KONG("搶摃上摃自摸", "Self-Draw after Kong after stealing from Kong", 30),
     FLOWER_WIN("兩台花", "All flower tiles", 30),
 
     FOUR_CONCEALED_PONGS("四暗刻", "Four groups of 3+ identical tiles, unrevealed", 30),

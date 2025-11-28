@@ -48,12 +48,16 @@ public class TaiwaneseSixteenScoreCalculator implements ScoreCalculator {
     private static final List<ScoringPatternMatcher> matchers = List.of(
             new FlowerMatcher(),
             new GeneralMatcher(),
+            new GameActionMatcher(),
+            new FirstDiscardsMatcher(),
+            new RemainingTilesMatcher(),
 
             new KongMatcher(),
             new WindTileMatcher(),
             new DragonTileMatcher(),
             new SuitsMatcher(),
 
+            new SingleWaitMatcher(),
             new LoSiuMatcher(),
             new SheungsMatcher(),
             new PongsMatcher(),

@@ -62,6 +62,10 @@ public class Board {
         return discardPile.size();
     }
 
+    public int getNumDrawsLeft() {
+        return drawPile.size() - minTilesLeft;
+    }
+
 //============================== DRAW AND DISCARD TILES ==============================//
 
     public boolean canDraw() {

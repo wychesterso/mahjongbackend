@@ -16,6 +16,7 @@ public class SuitsMatcher implements ScoringPatternMatcher {
         matchNoWords(ctx, hasWordTiles);
         matchTwoSuits(ctx, numRegularTypes, hasWordTiles);
         matchFiveOrSevenSuits(ctx, numRegularTypes, numWordTypes, numFlowerTypes);
+        matchFlush(ctx, numRegularTypes, numWordTypes);
     }
 
     public void matchNoWords(ScoringContext ctx, boolean hasWords) {
@@ -40,6 +41,16 @@ public class SuitsMatcher implements ScoringPatternMatcher {
                 ctx.addScoringPattern(ScoringPattern.SEVEN_SUITS);
             } else {
                 ctx.addScoringPattern(ScoringPattern.FIVE_SUITS);
+            }
+        }
+    }
+
+    public void matchFlush(ScoringContext ctx, int numRegularTypes, int numWordTypes) {
+        if (numRegularTypes == 1) {
+            if (numWordTypes == 0) {
+                ctx.addScoringPattern(ScoringPattern.FLUSH);
+            } else {
+                ctx.addScoringPattern(ScoringPattern.HALF_FLUSH);
             }
         }
     }
