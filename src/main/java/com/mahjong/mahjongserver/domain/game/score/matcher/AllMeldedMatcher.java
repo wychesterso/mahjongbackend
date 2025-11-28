@@ -7,7 +7,7 @@ public class AllMeldedMatcher implements ScoringPatternMatcher {
 
     @Override
     public void match(ScoringContext ctx) {
-        if (ctx.numRevealedMelds() == 0) {
+        if (ctx.getGroupedHand().numRevealedMelds() == 0) {
             if (ctx.containsScoringPattern(ScoringPattern.SELF_DRAW)) {
                 ctx.addScoringPattern(ScoringPattern.ALL_MELDED_SELF_DRAW);
             } else {

@@ -3,6 +3,7 @@ package com.mahjong.mahjongserver.dto.mapper;
 import com.mahjong.mahjongserver.domain.game.Game;
 import com.mahjong.mahjongserver.domain.game.GameAction;
 import com.mahjong.mahjongserver.domain.game.claim.ClaimOption;
+import com.mahjong.mahjongserver.domain.game.score.data.Meld;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringPattern;
 import com.mahjong.mahjongserver.domain.player.decision.Decision;
@@ -50,10 +51,10 @@ public class DTOMapper {
     public static ScoringContextDTO fromScoringContext(ScoringContext scoringContext) {
         return new ScoringContextDTO(
                 scoringContext.getScoringPatterns().stream().map(DTOMapper::fromScoringPattern).toList(),
-                scoringContext.getFlowers(),
-                scoringContext.getRevealedGroups(),
-                scoringContext.getConcealedGroups(),
-                scoringContext.getWinningGroup(),
+                scoringContext.getGroupedHand().getFlowers(),
+                scoringContext.getGroupedHand().getRevealedMelds().stream().map(Meld::getGroup).toList(),
+                scoringContext.getGroupedHand().getConcealedMelds().stream().map(Meld::getGroup).toList(),
+                scoringContext.getWinningMeld().getGroup(),
                 scoringContext.getWinningTile()
         );
     }

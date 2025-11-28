@@ -10,6 +10,14 @@ public class GroupedHandBuilder {
     private List<Tile> winningGroup = null;
     private MeldType winningGroupType = null;
 
+    public GroupedHandBuilder() {}
+
+    public GroupedHandBuilder(GroupedHandBuilder originalCopy) {
+        this.concealedGroups.addAll(originalCopy.getConcealedGroups());
+        this.winningGroup = new ArrayList<>(originalCopy.getWinningGroup());
+        this.winningGroupType = originalCopy.getWinningGroupType();
+    }
+
     public Stack<List<Tile>> getConcealedGroups() {
         return concealedGroups;
     }

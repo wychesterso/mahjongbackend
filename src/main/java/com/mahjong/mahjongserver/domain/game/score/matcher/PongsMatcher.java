@@ -1,5 +1,6 @@
 package com.mahjong.mahjongserver.domain.game.score.matcher;
 
+import com.mahjong.mahjongserver.domain.game.score.data.Meld;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringPattern;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
@@ -17,7 +18,7 @@ public class PongsMatcher implements ScoringPatternMatcher {
     }
 
     public void matchAllPongs(ScoringContext ctx) {
-        if (ctx.numPongsAndKongs() == 5) {
+        if (ctx.getGroupedHand().numPongsAndKongs() == 5) {
             if (ctx.ifExistsThenRemoveScoringPattern(ScoringPattern.ALL_CONCEALED_SELF_DRAW)) {
                 ctx.addScoringPattern(ScoringPattern.ALL_CONCEALED_PONGS_SELF_DRAW);
             } else {
@@ -27,38 +28,38 @@ public class PongsMatcher implements ScoringPatternMatcher {
     }
 
     private void matchPongPatterns(ScoringContext ctx) {
-        List<List<Tile>> pongs = ctx.getAllPongsAndKongs();
+        List<Meld> pongs = ctx.getGroupedHand().getPongsAndKongs();
         if (pongs.isEmpty()) return;
 
-        Map<Integer, List<List<Tile>>> byNumber = new HashMap<>();
+        Map<Integer, List<Meld>> byNumber = new HashMap<>();
         for (int i = 1; i <= 9; i++) byNumber.put(i, new ArrayList<>());
 
-        for (List<Tile> pong : pongs) {
+        for (Meld pong : pongs) {
             // group by num
-            byNumber.get(pong.getFirst().getTileNum()).add(pong);
+            byNumber.get(pong.getStartingTile().getTileNum()).add(pong);
         }
 
         for (int i = 1; i <= 9; i++) {
-            List<List<Tile>> groupedPongs = byNumber.get(i);
+            List<Meld> groupedPongs = byNumber.get(i);
 
             // find brothers
             matchBrothers(ctx, i, groupedPongs.size());
         }
 
-        Map<TileType, List<List<Tile>>> byType = new HashMap<>();
+        Map<TileType, List<Meld>> byType = new HashMap<>();
         for (TileType type : List.of(TileType.BAMBOO, TileType.CIRCLE, TileType.MILLION)) {
             byType.put(type, new ArrayList<>());
         }
 
-        for (List<Tile> pong : pongs) {
+        for (Meld pong : pongs) {
             // group by tile type
-            TileType type = pong.getFirst().getTileType();
+            TileType type = pong.getStartingTile().getTileType();
             if (type.getClassification() == TileClassification.REGULAR) {
                 byType.get(type).add(pong);
             }
         }
 
-        for (Map.Entry<TileType, List<List<Tile>>> entry : byType.entrySet()) {
+        for (Map.Entry<TileType, List<Meld>> entry : byType.entrySet()) {
             // find sisters
             matchSisters(ctx, entry.getValue(), entry.getKey());
         }
@@ -83,9 +84,12 @@ public class PongsMatcher implements ScoringPatternMatcher {
     }
 
     private boolean matchLittleThreeBrothers(ScoringContext ctx, int groupNum, int count) {
-        if (count == 2 && ctx.numPairs() == 1 && ctx.getPairTile().getTileNum() == groupNum) {
-            ctx.addScoringPattern(ScoringPattern.LITTLE_THREE_BROTHERS);
-            return true;
+        if (count == 2 && ctx.getGroupedHand().numPairs() == 1) {
+            Tile tile = ctx.getGroupedHand().getPairs().getFirst().getStartingTile();
+            if (tile.getTileNum() == groupNum) {
+                ctx.addScoringPattern(ScoringPattern.LITTLE_THREE_BROTHERS);
+                return true;
+            }
         }
         return false;
     }
@@ -102,10 +106,10 @@ public class PongsMatcher implements ScoringPatternMatcher {
     // SISTERS (adjacent nums, same suit)
     //======================================================================
 
-    private void matchSisters(ScoringContext ctx, List<List<Tile>> groupedPongs, TileType type) {
+    private void matchSisters(ScoringContext ctx, List<Meld> groupedPongs, TileType type) {
         boolean[] found = new boolean[10];
 
-        for (List<Tile> pong : groupedPongs) found[pong.getFirst().getTileNum()] = true;
+        for (Meld pong : groupedPongs) found[pong.getStartingTile().getTileNum()] = true;
 
         for (int i = 1; i <= 7; i++) {
             if (matchBigThreeSisters(ctx, found, i) || matchLittleThreeSisters(ctx, found, i, type)) {
@@ -123,8 +127,8 @@ public class PongsMatcher implements ScoringPatternMatcher {
     }
 
     private boolean matchLittleThreeSisters(ScoringContext ctx, boolean[] found, int i, TileType type) {
-        if (found[i] && found[i + 1] && ctx.numPairs() == 1) {
-            Tile tile = ctx.getPairTile();
+        if (found[i] && found[i + 1] && ctx.getGroupedHand().numPairs() == 1) {
+            Tile tile = ctx.getGroupedHand().getPairs().getFirst().getStartingTile();
             if (tile.getTileType() == type && (tile.getTileNum() == i - 1 || tile.getTileNum() == i + 2)) {
                 ctx.addScoringPattern(ScoringPattern.LITTLE_THREE_SISTERS);
                 return true;

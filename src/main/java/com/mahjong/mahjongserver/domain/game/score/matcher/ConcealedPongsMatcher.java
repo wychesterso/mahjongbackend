@@ -7,9 +7,9 @@ public class ConcealedPongsMatcher implements ScoringPatternMatcher {
 
     @Override
     public void match(ScoringContext ctx) {
-        switch (ctx.numConcealedPongsAndKongs()) {
+        switch (ctx.getGroupedHand().numConcealedPongsAndKongs()) {
             case 5 -> {
-                if (ctx.getScoringPatterns().contains(ScoringPattern.SELF_DRAW) && ctx.numBrightKongs() == 0) {
+                if (ctx.getScoringPatterns().contains(ScoringPattern.SELF_DRAW) && ctx.getGroupedHand().numRevealedKongs() == 0) {
                     ctx.addScoringPattern(ScoringPattern.ALL_CONCEALED_PONGS_SELF_DRAW);
                 } else {
                     ctx.addScoringPattern(ScoringPattern.FIVE_CONCEALED_PONGS);

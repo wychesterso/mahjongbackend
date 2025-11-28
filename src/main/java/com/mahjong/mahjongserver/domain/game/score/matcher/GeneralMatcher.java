@@ -1,5 +1,6 @@
 package com.mahjong.mahjongserver.domain.game.score.matcher;
 
+import com.mahjong.mahjongserver.domain.game.score.data.Meld;
 import com.mahjong.mahjongserver.domain.game.score.data.MeldType;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringPattern;
@@ -12,19 +13,11 @@ import java.util.List;
 public class GeneralMatcher implements ScoringPatternMatcher {
     @Override
     public void match(ScoringContext ctx) {
-        matchZhong(ctx);
         matchSelfDraw(ctx);
         matchMultipleWinners(ctx);
         matchGoodPair(ctx);
         matchWaitOnTwoPairs(ctx);
         matchAllConcealed(ctx);
-    }
-
-    private void matchZhong(ScoringContext ctx) {
-        Seat zhongSeat = ctx.getZhongSeat();
-        if (zhongSeat == ctx.getWinnerSeat() || zhongSeat == ctx.getLoserSeat()) {
-            ctx.addScoringPattern(ScoringPattern.DEALER);
-        }
     }
 
     private void matchSelfDraw(ScoringContext ctx) {
@@ -36,10 +29,11 @@ public class GeneralMatcher implements ScoringPatternMatcher {
     }
 
     private void matchGoodPair(ScoringContext ctx) {
-        for (List<Tile> pair : ctx.getPairs()) {
-            if (pair.getFirst().getTileType().getClassification() != TileClassification.REGULAR) continue;
+        for (Meld pair : ctx.getGroupedHand().getPairs()) {
+            Tile pairTile = pair.getStartingTile();
+            if (pairTile.getTileType().getClassification() != TileClassification.REGULAR) continue;
 
-            int tileNum = pair.getFirst().getTileNum();
+            int tileNum = pairTile.getTileNum();
             if (tileNum == 2 || tileNum == 5 || tileNum == 8) {
                 ctx.addScoringPattern(ScoringPattern.GOOD_PAIR);
                 return;
@@ -48,18 +42,17 @@ public class GeneralMatcher implements ScoringPatternMatcher {
     }
 
     private void matchWaitOnTwoPairs(ScoringContext ctx) {
-        if (ctx.getWinningGroupType() == MeldType.PONG) {
+        if (ctx.getWinningMeld().getMeldType() == MeldType.PONG) {
             ctx.addScoringPattern(ScoringPattern.WAIT_ON_TWO_PAIRS);
         }
     }
 
     private void matchAllConcealed(ScoringContext ctx) {
-        if (ctx.numRevealedMelds() == 0) {
-            if (ctx.ifExistsThenRemoveScoringPattern(ScoringPattern.SELF_DRAW)) {
-                ctx.addScoringPattern(ScoringPattern.ALL_CONCEALED_SELF_DRAW);
-            } else {
-                ctx.addScoringPattern(ScoringPattern.ALL_CONCEALED);
-            }
+        int numRevealedMelds = ctx.getGroupedHand().numRevealedMelds();
+        if (numRevealedMelds == 0) {
+            ctx.addScoringPattern(ScoringPattern.ALL_CONCEALED_SELF_DRAW);
+        } else if (numRevealedMelds == 1 && ctx.getWinningMeld().isRevealed()) {
+            ctx.addScoringPattern(ScoringPattern.ALL_CONCEALED);
         }
     }
 }

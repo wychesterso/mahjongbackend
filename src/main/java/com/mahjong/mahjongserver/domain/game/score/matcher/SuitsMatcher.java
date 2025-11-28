@@ -7,14 +7,14 @@ public class SuitsMatcher implements ScoringPatternMatcher {
 
     @Override
     public void match(ScoringContext ctx) {
-        boolean hasWords = ctx.hasWords();
+        boolean hasWordTiles = ctx.getGroupedHand().hasWordTiles();
 
-        int numRegularTypes = (ctx.hasCircles() ? 1 : 0) + (ctx.hasBamboos() ? 1 : 0) + (ctx.hasMillions() ? 1 : 0);
-        int numWordTypes = (ctx.hasWinds() ? 1 : 0) + (ctx.hasDragons() ? 1 : 0);
-        int numFlowerTypes = (ctx.hasSeasonFlower() ? 1 : 0) + (ctx.hasPlantFlower() ? 1 : 0);
+        int numRegularTypes = ctx.getGroupedHand().numNumberTileTypes();
+        int numWordTypes = ctx.getGroupedHand().numWordTileTypes();
+        int numFlowerTypes = ctx.getGroupedHand().numFlowerTileTypes();
 
-        matchNoWords(ctx, hasWords);
-        matchTwoSuits(ctx, numRegularTypes, hasWords);
+        matchNoWords(ctx, hasWordTiles);
+        matchTwoSuits(ctx, numRegularTypes, hasWordTiles);
         matchFiveOrSevenSuits(ctx, numRegularTypes, numWordTypes, numFlowerTypes);
     }
 

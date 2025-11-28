@@ -18,7 +18,7 @@ public class FlowerMatcher implements ScoringPatternMatcher {
 
     @Override
     public void match(ScoringContext ctx) {
-        Set<Tile> flowers = ctx.getFlowers();
+        Set<Tile> flowers = ctx.getGroupedHand().getFlowers();
         int numFlowers = flowers.size();
 
         if (numFlowers == 0) {

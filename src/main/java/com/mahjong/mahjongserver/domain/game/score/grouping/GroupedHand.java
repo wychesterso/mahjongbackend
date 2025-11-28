@@ -1,108 +1,367 @@
 package com.mahjong.mahjongserver.domain.game.score.grouping;
 
+import com.mahjong.mahjongserver.domain.game.score.data.Meld;
 import com.mahjong.mahjongserver.domain.game.score.data.MeldType;
 import com.mahjong.mahjongserver.domain.room.board.Hand;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
+import com.mahjong.mahjongserver.domain.room.board.tile.TileType;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class GroupedHand {
+
+    // =============== MELDS ===============
     private final Set<Tile> flowers = new HashSet<>();
-    private final List<List<Tile>> revealedPairs = new ArrayList<>();
-    private final List<List<Tile>> revealedSheungs = new ArrayList<>();
-    private final List<List<Tile>> revealedPongs = new ArrayList<>();
-    private final List<List<Tile>> brightKongs = new ArrayList<>();
-    private final List<List<Tile>> darkKongs = new ArrayList<>();
+    private final Map<MeldType, List<Meld>> meldsByMeldType = new HashMap<>();
+    private final Map<TileType, List<Meld>> meldsByTileType = new HashMap<>();
 
-    private final List<List<Tile>> concealedPairs = new ArrayList<>();
-    private final List<List<Tile>> concealedSheungs = new ArrayList<>();
-    private final List<List<Tile>> concealedPongs = new ArrayList<>();
-    private final List<List<Tile>> weirdGroups = new ArrayList<>();
+    // =============== WINNING GROUP ===============
+    private final Meld winningMeld;
 
-    private final List<Tile> winningGroup;
-    private final MeldType winningGroupType;
-
-    /**
-     * Constructs a GroupedHand from a GroupedHandBuilder that groups concealed tiles.
-     * @param builder the builder hand instance.
-     */
-    public GroupedHand(GroupedHandBuilder builder) {
+    // =============== CONSTRUCTOR ===============
+    public GroupedHand(GroupedHandBuilder builder, Hand hand, boolean isSelfDraw) {
         if (!builder.hasWinningGroup()) throw new IllegalArgumentException("[GroupedHand] builder has no winning group!");
+        initializeListsInMaps();
 
-        winningGroup = builder.getWinningGroup();
-        winningGroupType = builder.getWinningGroupType();
+        List<Tile> winningGroupTiles = builder.getWinningGroup();
+        winningMeld = addMeldKnownType(winningGroupTiles, builder.getWinningGroupType(), !isSelfDraw);
+
+        flowers.addAll(hand.getFlowers());
 
         for (List<Tile> group : builder.getConcealedGroups()) {
-            if (group.size() == 2) {
-                concealedPairs.add(group);
-            } else if (group.size() == 3) {
-                if (group.getFirst() == group.getLast()) {
-                    concealedPongs.add(group);
-                } else {
-                    concealedSheungs.add(group);
-                }
-            } else {
-                weirdGroups.add(group);
-            }
+            addMeld(group, false);
+        }
+        for (List<Tile> group : hand.getRevealedMelds()) {
+            addMeld(group, true);
         }
     }
 
-    public void populateRevealedTiles(Hand hand) {
-        flowers.addAll(hand.getFlowers());
-        revealedSheungs.addAll(hand.getSheungs());
-        revealedPongs.addAll(hand.getPongs());
-        brightKongs.addAll(hand.getBrightKongs());
-        darkKongs.addAll(hand.getDarkKongs());
+    private void initializeListsInMaps() {
+        for (MeldType meldType : MeldType.values()) {
+            meldsByMeldType.put(meldType, new ArrayList<>());
+        }
+        for (TileType tileType : List.of(TileType.CIRCLE, TileType.BAMBOO, TileType.MILLION, TileType.WIND, TileType.DRAGON)) {
+            meldsByTileType.put(tileType, new ArrayList<>());
+        }
     }
+
+    private void addMeld(List<Tile> group, boolean isRevealed) {
+        switch (group.size()) {
+            case 2 -> {addMeldKnownType(group, MeldType.PAIR, isRevealed);}
+            case 3 -> {
+                if (group.getFirst() == group.getLast()) {
+                    addMeldKnownType(group, MeldType.PONG, isRevealed);
+                } else {
+                    addMeldKnownType(group, MeldType.SHEUNG, isRevealed);
+                }
+            }
+            case 4 -> {addMeldKnownType(group, MeldType.KONG, isRevealed);}
+            default -> {addMeldKnownType(group, MeldType.OTHER, isRevealed);}
+        }
+    }
+
+    private Meld addMeldKnownType(List<Tile> group, MeldType meldType, boolean isRevealed) {
+        Tile startingTile = group.getFirst();
+        Meld meld = new Meld(meldType, startingTile, group, isRevealed);
+
+        meldsByMeldType.get(meldType).add(meld);
+        meldsByTileType.get(startingTile.getTileType()).add(meld);
+
+        return meld;
+    }
+
+    // =============== GROUP GETTERS ===============
+
+    public Meld getWinningMeld() {
+        return winningMeld;
+    }
+
+    private List<Meld> getConcealed(MeldType type) {
+        return meldsByMeldType.get(type)
+                .stream()
+                .filter(m -> !m.isRevealed())
+                .toList();
+    }
+
+    private List<Meld> getRevealed(MeldType type) {
+        return meldsByMeldType.get(type)
+                .stream()
+                .filter(Meld::isRevealed)
+                .toList();
+    }
+
+    // =============== FLOWERS ===============
 
     public Set<Tile> getFlowers() {
         return flowers;
     }
 
-    public List<List<Tile>> getConcealedPairs() {
-        return concealedPairs;
+    public int numFlowers() {
+        return flowers.size();
     }
 
-    public List<List<Tile>> getRevealedPairs() {
-        return revealedPairs;
+    public boolean hasFlowers() {
+        return !flowers.isEmpty();
     }
 
-    public List<List<Tile>> getConcealedSheungs() {
-        return concealedSheungs;
+    public boolean hasSeasonFlower() {
+        return getFlowers().stream().anyMatch(a -> a.getTileType() == TileType.SEASON);
     }
 
-    public List<List<Tile>> getRevealedSheungs() {
-        return revealedSheungs;
+    public boolean hasPlantFlower() {
+        return getFlowers().stream().anyMatch(a -> a.getTileType() == TileType.PLANT);
     }
 
-    public List<List<Tile>> getConcealedPongs() {
-        return concealedPongs;
+    /**
+     * Returns the number of different flower tile types present in the hand, out of 2.
+     * @return the number of tile types.
+     */
+    public int numFlowerTileTypes() {
+        return (int) Stream.of(hasSeasonFlower(), hasPlantFlower())
+                .filter(b -> b)
+                .count();
     }
 
-    public List<List<Tile>> getRevealedPongs() {
-        return revealedPongs;
+    // =============== PAIRS ===============
+
+    public List<Meld> getPairs() {
+        return meldsByMeldType.get(MeldType.PAIR);
     }
 
-    public List<List<Tile>> getBrightKongs() {
-        return brightKongs;
+    public int numPairs() {
+        return getPairs().size();
     }
 
-    public List<List<Tile>> getDarkKongs() {
-        return darkKongs;
+    public List<Meld> getConcealedPairs() {
+        return getConcealed(MeldType.PAIR);
     }
 
-    public List<List<Tile>> getWeirdGroups() {
-        return weirdGroups;
+    public int numConcealedPairs() {
+        return getConcealedPairs().size();
     }
 
-    public List<Tile> getWinningGroup() {
-        return winningGroup;
+    public List<Meld> getRevealedPairs() {
+        return getRevealed(MeldType.PAIR);
     }
 
-    public MeldType getWinningGroupType() {
-        return winningGroupType;
+    public int numRevealedPairs() {
+        return getRevealedPairs().size();
+    }
+
+    // =============== SHEUNGS ===============
+
+    public List<Meld> getSheungs() {
+        return meldsByMeldType.get(MeldType.SHEUNG);
+    }
+
+    public int numSheungs() {
+        return getSheungs().size();
+    }
+
+    public List<Meld> getConcealedSheungs() {
+        return getConcealed(MeldType.SHEUNG);
+    }
+
+    public int numConcealedSheungs() {
+        return getConcealedSheungs().size();
+    }
+
+    public List<Meld> getRevealedSheungs() {
+        return getRevealed(MeldType.SHEUNG);
+    }
+
+    public int numRevealedSheungs() {
+        return getRevealedSheungs().size();
+    }
+
+    // =============== PONGS ===============
+
+    public List<Meld> getPongs() {
+        return meldsByMeldType.get(MeldType.PONG);
+    }
+
+    public int numPongs() {
+        return getPongs().size();
+    }
+
+    public List<Meld> getConcealedPongs() {
+        return getConcealed(MeldType.PONG);
+    }
+
+    public int numConcealedPongs() {
+        return getConcealedPongs().size();
+    }
+
+    public List<Meld> getRevealedPongs() {
+        return getRevealed(MeldType.PONG);
+    }
+
+    public int numRevealedPongs() {
+        return getRevealedPongs().size();
+    }
+
+    // =============== KONGS ===============
+
+    public List<Meld> getKongs() {
+        return meldsByMeldType.get(MeldType.KONG);
+    }
+
+    public int numKongs() {
+        return getKongs().size();
+    }
+
+    public List<Meld> getConcealedKongs() {
+        return getConcealed(MeldType.KONG);
+    }
+
+    public int numConcealedKongs() {
+        return getConcealedKongs().size();
+    }
+
+    public List<Meld> getRevealedKongs() {
+        return getRevealed(MeldType.KONG);
+    }
+
+    public int numRevealedKongs() {
+        return getRevealedKongs().size();
+    }
+
+    // =============== KONGS ===============
+
+    public List<Meld> getPongsAndKongs() {
+        return Stream.of(getPongs(), getKongs())
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+
+    public int numPongsAndKongs() {
+        return getPongsAndKongs().size();
+    }
+
+    public List<Meld> getConcealedPongsAndKongs() {
+        return Stream.of(getConcealedPongs(), getRevealedKongs(), getConcealedKongs())
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+
+    public int numConcealedPongsAndKongs() {
+        return getConcealedPongsAndKongs().size();
+    }
+
+    public List<Meld> getTrulyConcealedPongsAndKongs() {
+        return Stream.of(getConcealedPongs(), getConcealedKongs())
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+
+    public int numTrulyConcealedPongsAndKongs() {
+        return getTrulyConcealedPongsAndKongs().size();
+    }
+
+    // =============== OTHERS ===============
+
+    public List<Meld> getWeirdMelds() {
+        return meldsByMeldType.get(MeldType.OTHER);
+    }
+
+    // =============== BY MELD TYPE - NUMBER TILES ===============
+
+    public List<Meld> getCircleMelds() {
+        return meldsByTileType.get(TileType.CIRCLE);
+    }
+
+    public List<Meld> getBambooMelds() {
+        return meldsByTileType.get(TileType.BAMBOO);
+    }
+
+    public List<Meld> getMillionMelds() {
+        return meldsByTileType.get(TileType.MILLION);
+    }
+
+    /**
+     * Returns all melds that use number tiles.
+     * @return the list of melds.
+     */
+    public List<Meld> getNumberTileMelds() {
+        return Stream.of(getCircleMelds(), getBambooMelds(), getMillionMelds())
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns the number of different number tile types present in the hand, out of 3.
+     * @return the number of tile types.
+     */
+    public int numNumberTileTypes() {
+        return (int) Stream.of(getCircleMelds(), getBambooMelds(), getMillionMelds())
+                .filter(group -> !group.isEmpty())
+                .count();
+    }
+
+    public boolean hasNumberTiles() {
+        return !getNumberTileMelds().isEmpty();
+    }
+
+    // =============== BY MELD TYPE - WORD TILES ===============c
+
+    public List<Meld> getWindMelds() {
+        return meldsByTileType.get(TileType.WIND);
+    }
+
+    public List<Meld> getDragonMelds() {
+        return meldsByTileType.get(TileType.DRAGON);
+    }
+
+    public List<Meld> getWordTileMelds() {
+        return Stream.of(getWindMelds(), getDragonMelds())
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Returns the number of different word tile types present in the hand, out of 2.
+     * @return the number of tile types.
+     */
+    public int numWordTileTypes() {
+        return (int) Stream.of(getWindMelds(), getDragonMelds())
+                .filter(group -> !group.isEmpty())
+                .count();
+    }
+
+    public boolean hasWordTiles() {
+        return !getWordTileMelds().isEmpty();
+    }
+
+    // =============== MORE GETTERS ===============
+
+    public List<Meld> getAllMelds() {
+        return meldsByMeldType.values()
+                .stream()
+                .flatMap(List::stream)
+                .toList();
+    }
+
+    public List<Meld> getConcealedMelds() {
+        return getAllMelds()
+                .stream()
+                .filter(m -> !m.isRevealed())
+                .toList();
+    }
+
+    public int numConcealedMelds() {
+        return getConcealedMelds().size();
+    }
+
+    public List<Meld> getRevealedMelds() {
+        return getAllMelds()
+                .stream()
+                .filter(m -> m.isRevealed())
+                .toList();
+    }
+
+    public int numRevealedMelds() {
+        return getRevealedMelds().size();
     }
 }

@@ -18,8 +18,8 @@ public class HandGrouper {
      * @param winningTile the winning tile.
      * @return the list of found valid groupings.
      */
-    public static List<GroupedHand> getValidGroupings(List<Tile> concealedTiles, Tile winningTile) {
-        List<GroupedHand> groupings = new ArrayList<>();
+    public static List<GroupedHandBuilder> getValidGroupings(List<Tile> concealedTiles, Tile winningTile) {
+        List<GroupedHandBuilder> groupings = new ArrayList<>();
 
         if (concealedTiles.size() == 17) {
             getThirteenOrphansGroupings(groupings, concealedTiles, winningTile);
@@ -41,7 +41,7 @@ public class HandGrouper {
      * @param winningTile the winning tile, or null if already used in the builder's grouping.
      * @param builder the grouping builder.
      */
-    private static void getRegularGroupings(List<GroupedHand> groupings,
+    private static void getRegularGroupings(List<GroupedHandBuilder> groupings,
                                             List<Tile> concealedTiles,
                                             Tile winningTile,
                                             GroupedHandBuilder builder) {
@@ -57,12 +57,12 @@ public class HandGrouper {
                 if (winningTile == null) {
                     // form pair with last two tiles
                     builder.addConcealedGroup(pair);
-                    groupings.add(new GroupedHand(builder));
+                    groupings.add(new GroupedHandBuilder(builder));
                     builder.backtrack();
                 } else {
                     // form pair and use as the winning group
                     setWinningGroup(builder, pair, MeldType.PAIR);
-                    groupings.add(new GroupedHand(builder));
+                    groupings.add(new GroupedHandBuilder(builder));
                     unsetWinningGroup(builder);
                 }
             }
@@ -112,19 +112,19 @@ public class HandGrouper {
         }
     }
 
-    private static void getThirteenOrphansGroupings(List<GroupedHand> groupings,
+    private static void getThirteenOrphansGroupings(List<GroupedHandBuilder> groupings,
                                                     List<Tile> concealedTiles,
                                                     Tile winningTile) {
 
     }
 
-    private static void getSixteenDisjointGroupings(List<GroupedHand> groupings,
+    private static void getSixteenDisjointGroupings(List<GroupedHandBuilder> groupings,
                                                     List<Tile> concealedTiles,
                                                     Tile winningTile) {
 
     }
 
-    private static void getLikKuLikKuGroupings(List<GroupedHand> groupings,
+    private static void getLikKuLikKuGroupings(List<GroupedHandBuilder> groupings,
                                                List<Tile> concealedTiles,
                                                Tile winningTile) {
 

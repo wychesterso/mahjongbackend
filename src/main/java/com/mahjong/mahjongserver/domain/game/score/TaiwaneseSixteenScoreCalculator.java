@@ -3,6 +3,7 @@ package com.mahjong.mahjongserver.domain.game.score;
 import com.mahjong.mahjongserver.domain.game.Game;
 import com.mahjong.mahjongserver.domain.game.score.grouping.GroupedHand;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
+import com.mahjong.mahjongserver.domain.game.score.grouping.GroupedHandBuilder;
 import com.mahjong.mahjongserver.domain.game.score.grouping.HandGrouper;
 import com.mahjong.mahjongserver.domain.game.score.matcher.*;
 import com.mahjong.mahjongserver.domain.room.Seat;
@@ -23,13 +24,13 @@ public class TaiwaneseSixteenScoreCalculator implements ScoreCalculator {
 
         // get all valid groupings for concealed tiles
         List<Tile> concealedTiles = hand.getConcealedTiles();
-        List<GroupedHand> groupings = HandGrouper.getValidGroupings(concealedTiles, game.getWinningTile());
+        List<GroupedHandBuilder> groupings = HandGrouper.getValidGroupings(concealedTiles, game.getWinningTile());
 
         ScoringContext bestScoringContext = null;
 
         // determine which grouping gives the best score
-        for (GroupedHand groupedHand : groupings) {
-            groupedHand.populateRevealedTiles(hand);
+        for (GroupedHandBuilder builder : groupings) {
+            GroupedHand groupedHand = new GroupedHand(builder, hand, game.getCurrentSeat() == winnerSeat);
 
             ScoringContext scoringContext = new ScoringContext(game, winnerSeat, groupedHand);
             calculateScoreForGrouping(scoringContext);
@@ -58,7 +59,13 @@ public class TaiwaneseSixteenScoreCalculator implements ScoreCalculator {
             new PongsMatcher(),
             new ConcealedPongsMatcher(),
             new AllMeldedMatcher(),
-            new WondersMatcher()
+            new FourTilesNGroupsMatcher(),
+
+            new DragonMatcher(),
+            new WondersMatcher(),
+
+            new ChickenHandMatcher(),
+            new ZhongMatcher()
     );
 
     private void calculateScoreForGrouping(ScoringContext scoringContext) {

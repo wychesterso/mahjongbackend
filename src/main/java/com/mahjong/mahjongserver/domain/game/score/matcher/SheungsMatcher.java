@@ -1,5 +1,6 @@
 package com.mahjong.mahjongserver.domain.game.score.matcher;
 
+import com.mahjong.mahjongserver.domain.game.score.data.Meld;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringPattern;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
@@ -19,7 +20,7 @@ public class SheungsMatcher implements ScoringPatternMatcher {
     }
 
     public void matchAllSheungs(ScoringContext ctx) {
-        if (ctx.getAllSheungs().size() == 5) {
+        if (ctx.getGroupedHand().numSheungs() == 5) {
             if (ctx.ifExistsThenRemoveScoringPattern(ScoringPattern.NO_WORDS_OR_FLOWERS)) {
                 ctx.addScoringPattern(ScoringPattern.ALL_SHEUNGS_NO_WORDS_OR_FLOWERS);
             } else {
@@ -28,17 +29,17 @@ public class SheungsMatcher implements ScoringPatternMatcher {
         }
     }
     private void matchSheungPatterns(ScoringContext ctx) {
-        List<List<Tile>> sheungs = ctx.getAllSheungs();
+        List<Meld> sheungs = ctx.getGroupedHand().getSheungs();
         if (sheungs.isEmpty()) return;
 
-        Map<Integer, List<List<Tile>>> byNumber = new HashMap<>();
+        Map<Integer, List<Meld>> byNumber = new HashMap<>();
 
-        for (List<Tile> sheung : sheungs) {
+        for (Meld sheung : sheungs) {
             // group into starting nums
-            byNumber.computeIfAbsent(sheung.getFirst().getTileNum(), k -> new ArrayList<>()).add(sheung);
+            byNumber.computeIfAbsent(sheung.getStartingTile().getTileNum(), k -> new ArrayList<>()).add(sheung);
         }
 
-        for (List<List<Tile>> numGrouping : byNumber.values()) {
+        for (List<Meld> numGrouping : byNumber.values()) {
             int numSheungsInGroup = numGrouping.size();
 
             // if group of 5 found, then guaranteed that no others exist
@@ -47,9 +48,9 @@ public class SheungsMatcher implements ScoringPatternMatcher {
             Map<TileType, Integer> typeCounts = new HashMap<>();
             int maxCount = 0;
 
-            for (List<Tile> sheung : numGrouping) {
+            for (Meld sheung : numGrouping) {
                 // further group into tile types
-                TileType type = sheung.getFirst().getTileType();
+                TileType type = sheung.getStartingTile().getTileType();
                 int count = typeCounts.getOrDefault(type, 0) + 1;
 
                 maxCount = Math.max(maxCount, count);

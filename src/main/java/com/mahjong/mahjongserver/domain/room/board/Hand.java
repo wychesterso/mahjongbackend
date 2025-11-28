@@ -47,6 +47,15 @@ public class Hand {
         return darkKongs;
     }
 
+    public List<List<Tile>> getRevealedMelds() {
+        List<List<Tile>> result = new ArrayList<>();
+        result.addAll(sheungs);
+        result.addAll(pongs);
+        result.addAll(brightKongs);
+        result.addAll(darkKongs);
+        return result;
+    }
+
     public Set<Tile> getFlowers() {
         return flowers;
     }

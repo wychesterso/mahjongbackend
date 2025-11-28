@@ -1,9 +1,11 @@
 package com.mahjong.mahjongserver.domain.game.score.matcher;
 
+import com.mahjong.mahjongserver.domain.game.score.data.Meld;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringContext;
 import com.mahjong.mahjongserver.domain.game.score.data.ScoringPattern;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
+import com.mahjong.mahjongserver.domain.room.board.tile.TileType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,16 +18,17 @@ public class WindTileMatcher implements ScoringPatternMatcher {
         Seat playerSeat = ctx.getWinnerSeat();
         Seat prevailingWind = ctx.getWindSeat();
 
-        for (List<Tile> group : ctx.getAllPongsAndKongs()) {
-            Tile first = group.getFirst();
-            if (isWind(first)) {
-                ScoringPattern windPattern = getWindPattern(first);
+        for (Meld meld : ctx.getGroupedHand().getPongsAndKongs()) {
+            Tile tile = meld.getStartingTile();
+
+            if (tile.getTileType() == TileType.WIND) {
+                ScoringPattern windPattern = getWindPattern(tile);
                 int extra = 0;
 
-                if (playerSeat != null && first == seatToTile(playerSeat)) {
+                if (playerSeat != null && tile == seatToTile(playerSeat)) {
                     extra++;
                 }
-                if (prevailingWind != null && first == seatToTile(prevailingWind)) {
+                if (prevailingWind != null && tile == seatToTile(prevailingWind)) {
                     extra++;
                 }
 
@@ -35,32 +38,27 @@ public class WindTileMatcher implements ScoringPatternMatcher {
         }
 
         int windPongCount = windPoints.size();
-        boolean pairIsWind = ctx.getPair() != null &&
-                ctx.getPairTile() != null &&
-                isWind(ctx.getPairTile());
+        boolean hasWindPair = ctx.getGroupedHand().getPairs().stream().anyMatch(
+                a -> a.getStartingTile().getTileType() == TileType.WIND
+        );
 
         if (windPongCount == 4) {
-            ctx.addScoringPattern(ScoringPattern.BIG_FOUR_WINDS); // 大四喜
+            ctx.addScoringPattern(ScoringPattern.BIG_FOUR_WINDS);
         } else if (windPongCount == 3) {
-            if (pairIsWind) {
-                ctx.addScoringPattern(ScoringPattern.LITTLE_FOUR_WINDS); // 小四喜
+            if (hasWindPair) {
+                ctx.addScoringPattern(ScoringPattern.LITTLE_FOUR_WINDS);
             } else {
-                ctx.addScoringPattern(ScoringPattern.BIG_THREE_WINDS); // 大三風
+                ctx.addScoringPattern(ScoringPattern.BIG_THREE_WINDS);
             }
         } else if (windPongCount == 2) {
-            if (pairIsWind) {
-                ctx.addScoringPattern(ScoringPattern.LITTLE_THREE_WINDS); // 小三風
+            if (hasWindPair) {
+                ctx.addScoringPattern(ScoringPattern.LITTLE_THREE_WINDS);
             } else {
                 ctx.addScoringPatterns(windPoints);
             }
         } else {
             ctx.addScoringPatterns(windPoints);
         }
-    }
-
-    private boolean isWind(Tile tile) {
-        return tile == Tile.EAST || tile == Tile.SOUTH
-                || tile == Tile.WEST || tile == Tile.NORTH;
     }
 
     private Tile seatToTile(Seat seat) {
