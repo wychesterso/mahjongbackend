@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 public record GameStateDTO(
+        long gameNum,
         long gameStateVersion,
         TableDTO table,
         Seat currentTurn,
@@ -21,5 +22,6 @@ public record GameStateDTO(
         Tile drawnTile, // only visible to current player
         boolean gameActive,
         List<Seat> winnerSeats,
-        int numDraws
+        int numDraws,
+        int remainingTiles
 ) {}

@@ -61,7 +61,7 @@ public class GameController {
     @MessageMapping("/game/respondDrawDecision")
     public void handleDrawDecision(DecisionResponseDTO response, Principal principal) {
         String playerId = principal.getName();
-        gameService.handleDrawClaim(response.getRoomId(), playerId, response.getDecision());
+        gameService.handleDrawClaim(response.getRoomId(), playerId, response.getDecision(), response.getKongTile());
     }
 
     @MessageMapping("/game/respondDiscardDecision")

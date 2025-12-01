@@ -1,18 +1,21 @@
 package com.mahjong.mahjongserver.dto.response;
 
 import com.mahjong.mahjongserver.domain.player.decision.Decision;
+import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 
 public class DecisionResponseDTO {
     private String roomId;
     private Decision decision;
+    private Tile kongTile;
 
     public DecisionResponseDTO() {
         // for Spring deserialization
     }
 
-    public DecisionResponseDTO(String roomId, Decision decision) {
+    public DecisionResponseDTO(String roomId, Decision decision, Tile kongTile) {
         this.roomId = roomId;
         this.decision = decision;
+        this.kongTile = kongTile;
     }
 
     public String getRoomId() {
@@ -29,5 +32,13 @@ public class DecisionResponseDTO {
 
     public void setDecision(Decision decision) {
         this.decision = decision;
+    }
+
+    public Tile getKongTile() {
+        return kongTile;
+    }
+
+    public void setKongTile(Tile kongTile) {
+        this.kongTile = kongTile;
     }
 }

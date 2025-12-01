@@ -50,18 +50,12 @@ public class Game {
     private Tile winningTile = null;
 
     // game state
+    private final long gameNum;
     private long gameStateVersion = 0;
-    private long tableVersion = 0;
 
-    public Game(Room room, Seat windSeat) {
+    public Game(Room room, long gameNum, Seat windSeat, Seat zhongSeat) {
         this.room = room;
-        this.windSeat = windSeat;
-        zhongSeat = Seat.EAST;
-        currentSeat = Seat.EAST;
-    }
-
-    public Game(Room room, Seat windSeat, Seat zhongSeat) {
-        this.room = room;
+        this.gameNum = gameNum;
         this.windSeat = windSeat;
         this.zhongSeat = zhongSeat;
         currentSeat = zhongSeat;
@@ -132,12 +126,12 @@ public class Game {
         return awaitingDiscard;
     }
 
-    public long getAndIncrementGameStateVersion() {
-        return gameStateVersion++;
+    public long getGameNum() {
+        return gameNum;
     }
 
-    public long getAndIncrementTableVersion() {
-        return tableVersion++;
+    public long getAndIncrementGameStateVersion() {
+        return gameStateVersion++;
     }
 
     //============================== EVENTS ==============================//
@@ -158,6 +152,7 @@ public class Game {
         table = new Table();
         winnerSeats.clear();
         numDraws = 0;
+        gameStateVersion = 0;
 
         expectedClaims.clear();
         claimResponses.clear();
@@ -171,6 +166,11 @@ public class Game {
         System.out.println("[Game] startTurnWithoutDraw(): room=" + room.getRoomId() + ", currentSeat=" + currentSeat);
         resetClaims();
         updateTableState();
+
+        // check claim options
+        if (handleClaimsAfterDraw(null)) return;
+
+        // prompt discard
         promptDiscard();
     }
 
@@ -265,19 +265,19 @@ public class Game {
             Hand hand = table.getHand(seat);
 
             if (HandChecker.checkWin(hand, discardedTile)) {
-                claims.add(new ClaimOption(Decision.WIN, null));
+                claims.add(new ClaimOption(Decision.WIN, null, null, null));
             }
 
             if (HandChecker.checkBrightKong(hand, discardedTile)) {
-                claims.add(new ClaimOption(Decision.BRIGHT_KONG, null));
+                claims.add(new ClaimOption(Decision.BRIGHT_KONG, null, null, null));
             }
 
             if (HandChecker.checkPong(hand, discardedTile)) {
-                claims.add(new ClaimOption(Decision.PONG, null));
+                claims.add(new ClaimOption(Decision.PONG, null, null, null));
             }
 
             if (currentSeat.next() == seat && HandChecker.checkSheung(hand, discardedTile)) {
-                claims.add(new ClaimOption(Decision.SHEUNG, HandChecker.getSheungCombos(hand, discardedTile)));
+                claims.add(new ClaimOption(Decision.SHEUNG, HandChecker.getSheungCombos(hand, discardedTile), null, null));
             }
 
             if (!claims.isEmpty()) {
@@ -294,15 +294,15 @@ public class Game {
         Hand hand = table.getHand(currentSeat);
 
         if (HandChecker.checkWin(hand)) {
-            claims.add(new ClaimOption(Decision.WIN, null));
+            claims.add(new ClaimOption(Decision.WIN, null, null, null));
         }
 
         if (HandChecker.checkDarkKong(hand)) {
-            claims.add(new ClaimOption(Decision.DARK_KONG, null));
+            claims.add(new ClaimOption(Decision.DARK_KONG, null, null, HandChecker.getDarkKongOptions(hand)));
         }
 
         if (HandChecker.checkBrightKong(hand)) {
-            claims.add(new ClaimOption(Decision.BRIGHT_KONG, null));
+            claims.add(new ClaimOption(Decision.BRIGHT_KONG, null, HandChecker.getBrightKongOptions(hand), null));
         }
 
         return claims;
@@ -313,10 +313,24 @@ public class Game {
         if (!claimOptions.isEmpty()) {
             expectedClaims.put(currentSeat, claimOptions);
 
-            promptDrawDecision(drawnTile, currentSeat, claimOptions.stream()
+            List<Decision> options = claimOptions.stream()
                     .map(ClaimOption::getDecision)
                     .distinct()
-                    .toList());
+                    .toList();
+
+            List<Tile> availableBrightKongs = claimOptions.stream()
+                    .filter(opt -> opt.getDecision() == Decision.BRIGHT_KONG)
+                    .findFirst()
+                    .map(ClaimOption::getBrightKongOptions)
+                    .orElse(Collections.emptyList());
+
+            List<Tile> availableDarkKongs = claimOptions.stream()
+                    .filter(opt -> opt.getDecision() == Decision.DARK_KONG)
+                    .findFirst()
+                    .map(ClaimOption::getDarkKongOptions)
+                    .orElse(Collections.emptyList());
+
+            promptDrawDecision(drawnTile, currentSeat, options, availableBrightKongs, availableDarkKongs);
 
             room.getTimeoutScheduler().schedule(
                     "claim:" + getPlayerContext().getPlayer().getId(),
@@ -334,6 +348,8 @@ public class Game {
     private void promptClaimDecisions(Tile discardedTile, Seat discarder, Map<Seat, List<ClaimOption>> claimMap) {
         for (Map.Entry<Seat, List<ClaimOption>> entry : claimMap.entrySet()) {
             Seat claimant = entry.getKey();
+            if (claimant == discarder) continue;
+
             List<ClaimOption> claimOptions = entry.getValue();
 
             PlayerContext ctx = room.getPlayerContext(claimant);
@@ -347,7 +363,7 @@ public class Game {
             List<List<Tile>> sheungCombos = claimOptions.stream()
                     .filter(opt -> opt.getDecision() == Decision.SHEUNG)
                     .findFirst()
-                    .map(ClaimOption::getValidCombos)
+                    .map(ClaimOption::getSheungCombos)
                     .orElse(Collections.emptyList());
 
             System.out.println("[Game] promptClaimDecision: room=" + room.getRoomId() + ", discarder=" + discarder + ", claimant=" + claimant);
@@ -362,15 +378,18 @@ public class Game {
         }
     }
 
-    private void promptDrawDecision(Tile drawnTile, Seat claimee, List<Decision> availableOptions) {
+    private void promptDrawDecision(Tile drawnTile, Seat claimee, List<Decision> availableOptions,
+                                    List<Tile> availableBrightKongs, List<Tile> availableDarkKongs) {
         System.out.println("[Game] promptDrawDecision: room=" + room.getRoomId() + ", claimee=" + claimee);
 
         PlayerContext ctx = room.getPlayerContext(claimee);
         ctx.getDecisionHandler().promptDecisionOnDraw(
                 ctx,
-                DTOMapper.fromTable(table, claimee, tableVersion++),
+                DTOMapper.fromGame(this, claimee, gameStateVersion++),
                 drawnTile,
-                availableOptions
+                availableOptions,
+                availableBrightKongs,
+                availableDarkKongs
         );
     }
 
@@ -381,7 +400,7 @@ public class Game {
         PlayerContext ctx = room.getPlayerContext(claimee);
         ctx.getDecisionHandler().promptDecisionOnDiscard(
                 ctx,
-                DTOMapper.fromTable(table, claimee, tableVersion++),
+                DTOMapper.fromGame(this, claimee, gameStateVersion++),
                 discardedTile,
                 discarder,
                 availableOptions,
@@ -394,7 +413,7 @@ public class Game {
         awaitingDiscard = true;
 
         PlayerContext ctx = getPlayerContext();
-        ctx.getDecisionHandler().promptDiscard(ctx, fromTable());
+        ctx.getDecisionHandler().promptDiscard(ctx, DTOMapper.fromGame(this, currentSeat, gameStateVersion++));
 
         room.getTimeoutScheduler().schedule("discard:" + ctx.getPlayer().getId(),
                 this::handleAutoDiscard, TIMEOUT_MILLIS);
@@ -405,7 +424,8 @@ public class Game {
         awaitingDiscard = true;
 
         PlayerContext ctx = getPlayerContext();
-        ctx.getDecisionHandler().promptDiscardOnDraw(ctx, fromTable(), drawnTile);
+        ctx.getDecisionHandler().promptDiscardOnDraw(ctx,
+                DTOMapper.fromGame(this, currentSeat, gameStateVersion++), drawnTile);
 
         room.getTimeoutScheduler().schedule("discard:" + ctx.getPlayer().getId(),
                 this::handleAutoDiscard, TIMEOUT_MILLIS);
@@ -421,7 +441,7 @@ public class Game {
             PlayerContext ctx = room.getPlayerContext(seat);
             room.getGameEventPublisher().sendTableUpdate(
                     ctx.getPlayer().getId(),
-                    DTOMapper.fromGame(this, seat, gameStateVersion++, tableVersion++)
+                    DTOMapper.fromGame(this, seat, gameStateVersion++)
             );
         }
     }
@@ -506,22 +526,37 @@ public class Game {
 
             switch (decision) {
                 case BRIGHT_KONG -> {
-                    hand.performBrightKongFromDiscard(claimedTile);
-                    setCurrentAction(GameAction.KONG);
-                    currentSeat = claimer;
-                    startTurnWithBonusDraw();
+                    if (hand.performBrightKongFromDiscard(claimedTile)) {
+                        setCurrentAction(GameAction.KONG);
+                        currentSeat = claimer;
+                        startTurnWithBonusDraw();
+                    } else {
+                        System.out.println("[Game] Claim response after discard - Bright Kong failed!");
+                        currentSeat = currentSeat.next();
+                        startTurnWithDraw();
+                    }
                 }
                 case PONG -> {
-                    hand.performPong(claimedTile);
-                    setCurrentAction(GameAction.PONG);
-                    currentSeat = claimer;
-                    startTurnWithoutDraw();
+                    if (hand.performPong(claimedTile)) {
+                        setCurrentAction(GameAction.PONG);
+                        currentSeat = claimer;
+                        startTurnWithoutDraw();
+                    } else {
+                        System.out.println("[Game] Claim response after discard - Pong failed!");
+                        currentSeat = currentSeat.next();
+                        startTurnWithDraw();
+                    }
                 }
                 case SHEUNG -> {
-                    hand.performSheung(claimedTile, sheungCombo);
-                    setCurrentAction(GameAction.SHEUNG);
-                    currentSeat = claimer;
-                    startTurnWithoutDraw();
+                    if (hand.performSheung(claimedTile, sheungCombo)) {
+                        setCurrentAction(GameAction.SHEUNG);
+                        currentSeat = claimer;
+                        startTurnWithoutDraw();
+                    } else {
+                        System.out.println("[Game] Claim response after discard - Sheung failed!");
+                        currentSeat = currentSeat.next();
+                        startTurnWithDraw();
+                    }
                 }
                 default -> {
                     currentSeat = currentSeat.next();
@@ -566,6 +601,7 @@ public class Game {
         updateTableState();
 
         // 3. check if other players can claim this tile (win, kong, pong, sheung)
+        resetClaims();
         expectedClaims.putAll(checkForClaimsOnDiscard(discardedTile));
 
         if (!expectedClaims.isEmpty()) {
@@ -585,7 +621,7 @@ public class Game {
 
 //============================== HANDLE FRONTEND RESPONSE - DRAW ==============================//
 
-    public void handleClaimResponseFromDraw(Player player, Decision decision) {
+    public void handleClaimResponseFromDraw(Player player, Decision decision, Tile kongTile) {
         if (room.getSeat(player) != currentSeat) {
             System.out.println("[Game] Ignored invalid claim response, room=" + room.getRoomId() + ", claimer=" + player.getId() + ", decision=" + decision);
             return;
@@ -602,17 +638,23 @@ public class Game {
                 endGameByWin();
             }
             case DARK_KONG -> {
-                Tile kongTile = hand.getLastDrawnTile();
-                hand.performDarkKong(kongTile);
-                setCurrentAction(GameAction.KONG);
-                startTurnWithBonusDraw();
+                if (hand.performDarkKong(kongTile)) {
+                    setCurrentAction(GameAction.KONG);
+                    startTurnWithBonusDraw();
+                } else {
+                    System.out.println("[Game] Claim response from draw - Dark Kong failed!");
+                    promptDiscard();
+                }
             }
             case BRIGHT_KONG -> {
                 // promote pong into kong
-                Tile kongTile = hand.getLastDrawnTile();
-                hand.performBrightKongFromDraw(kongTile);
-                setCurrentAction(GameAction.KONG);
-                startTurnWithBonusDraw();
+                if (hand.performBrightKongFromDraw(kongTile)) {
+                    setCurrentAction(GameAction.KONG);
+                    startTurnWithBonusDraw();
+                } else {
+                    System.out.println("[Game] Claim response from draw - Bright Kong failed!");
+                    promptDiscard();
+                }
             }
             case PASS -> {
                 promptDiscard(); // continue turn
@@ -622,7 +664,7 @@ public class Game {
     }
 
     public void handleAutoPassDrawDecision(Player player) {
-        handleClaimResponseFromDraw(player, Decision.PASS);
+        handleClaimResponseFromDraw(player, Decision.PASS, null);
     }
 
 //============================== GAME END ==============================//
@@ -633,7 +675,7 @@ public class Game {
 
         room.getGameEventPublisher().sendGameEnd(
                 room.getRoomId(),
-                new EndGameDTO(GameResult.DRAW, Map.of(), Set.of(), DTOMapper.fromTable(table, null, tableVersion++))
+                new EndGameDTO(GameResult.DRAW, Map.of(), Set.of(), DTOMapper.fromTable(table, null))
         );
 
         room.onGameEnd();
@@ -646,7 +688,7 @@ public class Game {
         // get winners and scoring
         Map<Seat, ScoringContextDTO> winners = new HashMap<>();
         for (Seat seat : winnerSeats) {
-            ScoringContext scoringContext = room.getScoreCalculator().calculateScore(this, seat);
+            ScoringContext scoringContext = room.getScoreCalculator().calculateScore(this, seat, room.getLumZhongCount());
             winners.put(seat, DTOMapper.fromScoringContext(scoringContext));
         }
 
@@ -664,7 +706,7 @@ public class Game {
 
         room.getGameEventPublisher().sendGameEnd(
                 room.getRoomId(),
-                new EndGameDTO(GameResult.WIN, winners, loserSeats, DTOMapper.fromTable(table, null, tableVersion++))
+                new EndGameDTO(GameResult.WIN, winners, loserSeats, DTOMapper.fromTable(table, null))
         );
 
         room.onGameEnd();
@@ -677,7 +719,7 @@ public class Game {
     }
 
     private TableDTO fromTable() {
-        return DTOMapper.fromTable(table, currentSeat, tableVersion++);
+        return DTOMapper.fromTable(table, currentSeat);
     }
 
     private int decisionPriority(Decision d) {
@@ -702,7 +744,8 @@ public class Game {
 
     private boolean containsSheungCombo(List<ClaimOption> options, List<Tile> target) {
         for (ClaimOption option : options) {
-            for (List<Tile> combo : option.getValidCombos()) {
+            if (option.getDecision() != Decision.SHEUNG) continue;
+            for (List<Tile> combo : option.getSheungCombos()) {
                 if (combo != null && isEqualCombo(combo, target)) return true;
             }
         }

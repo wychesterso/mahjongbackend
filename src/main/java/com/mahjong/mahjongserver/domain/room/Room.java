@@ -30,8 +30,11 @@ public class Room {
     private Map<Seat, PlayerContext> playerContexts = new HashMap<>();
 
     private Game currentGame = null;
+    private long gameNum = 0;
+
     private Seat windSeat = Seat.EAST;
     private Seat zhongSeat = Seat.EAST;
+    private int lumZhongCount = 0;
 
     private ScoreCalculator scoreCalculator;
     private GameEventPublisher gameEventPublisher;
@@ -375,6 +378,10 @@ public class Room {
         return zhongSeat;
     }
 
+    public int getLumZhongCount() {
+        return lumZhongCount;
+    }
+
     /**
      * Starts a game if all seats are filled.
      *
@@ -391,8 +398,8 @@ public class Room {
 
         System.out.println("[Room] startGame(): announcing game_start for room=" + roomId);
         gameEventPublisher.sendGameStart(roomId);
-        currentGame = new Game(this, windSeat, zhongSeat);
-        System.out.println("[Room] startGame(): created Game instance for room=" + roomId + ", currentGame=" + (currentGame==null?"null":"created"));
+        currentGame = new Game(this, ++gameNum, windSeat, zhongSeat);
+        System.out.println("[Room] startGame(): created Game instance for room=" + roomId + ", gameNum=" + gameNum);
 
         return true;
     }
@@ -438,7 +445,15 @@ public class Room {
                 .allMatch(decision -> decision == EndGameDecision.NEXT_GAME);
 
         if (allWantAnotherGame) {
-            rotateSeatsAfterGame();
+            if (currentGame.getWinnerSeats().contains(zhongSeat)) {
+                // lum zhong and increment count
+                lumZhongCount++;
+            } else if (!currentGame.getWinnerSeats().isEmpty()) {
+                // no lum zhong, reset count
+                rotateSeatsAfterGame();
+            }
+            // on draw, lum zhong without incrementing count (i.e. do nothing)
+
             boolean success = startGame();
             if (success) {
                 getCurrentGame().startGame();
@@ -456,6 +471,7 @@ public class Room {
      */
     private void rotateSeatsAfterGame() {
         zhongSeat = zhongSeat.next();
+        lumZhongCount = 0;
         if (zhongSeat == Seat.EAST) windSeat = windSeat.next();
     }
 }

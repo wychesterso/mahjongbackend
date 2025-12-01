@@ -69,7 +69,7 @@ public class GameService {
             throw new AccessDeniedException("You are not a player in this room.");
         }
 
-        return DTOMapper.fromGame(game, selfSeat, game.getAndIncrementGameStateVersion(), game.getAndIncrementTableVersion());
+        return DTOMapper.fromGame(game, selfSeat, game.getAndIncrementGameStateVersion());
     }
 
     /**
@@ -89,11 +89,11 @@ public class GameService {
         room.getCurrentGame().handleClaimResponseFromDiscard(player, decision, sheungCombo);
     }
 
-    public void handleDrawClaim(String roomId, String playerId, Decision decision) {
+    public void handleDrawClaim(String roomId, String playerId, Decision decision, Tile kongTile) {
         Room room = roomManager.getRoom(roomId);
         Player player = findPlayerInRoom(room, playerId);
 
-        room.getCurrentGame().handleClaimResponseFromDraw(player, decision);
+        room.getCurrentGame().handleClaimResponseFromDraw(player, decision, kongTile);
     }
 
     public void handleAutoDiscard(String roomId, String playerId) {

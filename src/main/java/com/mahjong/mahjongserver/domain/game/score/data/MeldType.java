@@ -5,5 +5,7 @@ public enum MeldType {
     SHEUNG,
     PONG,
     KONG,
+    THIRTEEN_ORPHANS,
+    SIXTEEN_DISJOINT,
     OTHER
 }

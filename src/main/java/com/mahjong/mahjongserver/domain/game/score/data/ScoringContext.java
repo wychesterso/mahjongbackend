@@ -14,6 +14,7 @@ public class ScoringContext {
     private final Game game;
     private final Seat winnerSeat;
     private final boolean isSelfDraw;
+    private final int lumZhongCount;
     private final GroupedHand groupedHand;
 
     // resulting scoring pattern list
@@ -25,10 +26,11 @@ public class ScoringContext {
      * @param winnerSeat the seat of the winner.
      * @param groupedHand the hand grouping to calculate score for.
      */
-    public ScoringContext(Game game, Seat winnerSeat, GroupedHand groupedHand) {
+    public ScoringContext(Game game, Seat winnerSeat, int lumZhongCount, GroupedHand groupedHand) {
         this.game = game;
         this.winnerSeat = winnerSeat;
         this.isSelfDraw = winnerSeat == game.getCurrentSeat();
+        this.lumZhongCount = lumZhongCount;
         this.groupedHand = groupedHand;
     }
 
@@ -44,6 +46,10 @@ public class ScoringContext {
 
     public boolean isSelfDraw() {
         return isSelfDraw;
+    }
+
+    public int getLumZhongCount() {
+        return lumZhongCount;
     }
 
     public Seat getWindSeat() {

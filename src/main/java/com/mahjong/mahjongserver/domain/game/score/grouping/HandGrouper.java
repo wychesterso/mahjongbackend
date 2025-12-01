@@ -2,6 +2,7 @@ package com.mahjong.mahjongserver.domain.game.score.grouping;
 
 import com.mahjong.mahjongserver.domain.game.score.HandChecker;
 import com.mahjong.mahjongserver.domain.game.score.data.MeldType;
+import com.mahjong.mahjongserver.domain.room.board.Hand;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import com.mahjong.mahjongserver.domain.room.board.tile.TileClassification;
 import com.mahjong.mahjongserver.domain.room.board.tile.TileType;
@@ -14,8 +15,9 @@ public class HandGrouper {
 
     /**
      * Generates all valid groupings for the given collection of concealed tiles.
+     *
      * @param concealedTiles the list of concealed tiles to group.
-     * @param winningTile the winning tile.
+     * @param winningTile    the winning tile.
      * @return the list of found valid groupings.
      */
     public static List<GroupedHandBuilder> getValidGroupings(List<Tile> concealedTiles, Tile winningTile) {
@@ -24,7 +26,10 @@ public class HandGrouper {
         if (concealedTiles.size() == 17) {
             getThirteenOrphansGroupings(groupings, concealedTiles, winningTile);
             getSixteenDisjointGroupings(groupings, concealedTiles, winningTile);
-            getLikKuLikKuGroupings(groupings, concealedTiles, winningTile);
+
+            List<Tile> newConcealedTiles = new ArrayList<>(concealedTiles);
+            Collections.sort(newConcealedTiles);
+            getLikKuLikKuGroupings(groupings, newConcealedTiles, winningTile, new GroupedHandBuilder());
         }
 
         List<Tile> newConcealedTiles = new ArrayList<>(concealedTiles);
@@ -36,10 +41,11 @@ public class HandGrouper {
 
     /**
      * Generates all valid groupings in the standard format, with 5 melds and 1 pair.
-     * @param groupings the list of found valid groupings.
+     *
+     * @param groupings      the list of found valid groupings.
      * @param concealedTiles the list of unused concealed tiles.
-     * @param winningTile the winning tile, or null if already used in the builder's grouping.
-     * @param builder the grouping builder.
+     * @param winningTile    the winning tile, or null if already used in the builder's grouping.
+     * @param builder        the grouping builder.
      */
     private static void getRegularGroupings(List<GroupedHandBuilder> groupings,
                                             List<Tile> concealedTiles,
@@ -115,19 +121,174 @@ public class HandGrouper {
     private static void getThirteenOrphansGroupings(List<GroupedHandBuilder> groupings,
                                                     List<Tile> concealedTiles,
                                                     Tile winningTile) {
+        GroupedHandBuilder builder = new GroupedHandBuilder();
+        List<Tile> remainingTiles = new ArrayList<>(concealedTiles);
 
+        List<Tile> orphanGroup = new ArrayList<>();
+
+        for (Tile tile : HandChecker.getThirteenOrphans()) {
+            if (!remainingTiles.remove(tile)) return;
+            orphanGroup.add(tile);
+        }
+
+        // try all combinations of 3
+        for (int i = 0; i < 4; i++) {
+            List<Tile> group = new ArrayList<>();
+            Tile loneTile = null;
+
+            for (int j = 0; j < 4; j++) {
+                if (i == j) {
+                    loneTile = remainingTiles.get(j);
+                } else {
+                    group.add(remainingTiles.get(j));
+                }
+            }
+
+            if (HandChecker.isValidGroup(group) && HandChecker.getThirteenOrphans().contains(loneTile)) {
+                orphanGroup.remove(loneTile);
+                MeldType groupType = HandChecker.checkGroupType(group);
+
+                if (winningTile == loneTile) {
+                    builder.setWinningGroup(List.of(loneTile, loneTile));
+                    builder.setWinningGroupType(MeldType.PAIR);
+
+                } else if (group.contains(winningTile)) {
+                    builder.setWinningGroup(group);
+                    builder.setWinningGroupType(groupType);
+
+                } else {
+                    builder.setWinningGroup(orphanGroup);
+                    builder.setWinningGroupType(MeldType.THIRTEEN_ORPHANS);
+                }
+
+                if (builder.getWinningGroupType() != MeldType.THIRTEEN_ORPHANS) builder.addConcealedGroup(orphanGroup);
+                if (builder.getWinningGroupType() != groupType) builder.addConcealedGroup(group);
+                if (builder.getWinningGroupType() != MeldType.PAIR) builder.addConcealedGroup(List.of(loneTile, loneTile));
+
+                groupings.add(builder);
+                return;
+            }
+        }
     }
 
     private static void getSixteenDisjointGroupings(List<GroupedHandBuilder> groupings,
                                                     List<Tile> concealedTiles,
                                                     Tile winningTile) {
+        GroupedHandBuilder builder = new GroupedHandBuilder();
+        List<Tile> remainingTiles = new ArrayList<>(concealedTiles);
+        Collections.sort(remainingTiles);
 
+        List<Tile> disjointGroup = new ArrayList<>();
+        List<Tile> pairGroup = List.of();
+
+        // check every combination of two tiles
+        for (int i = 0; i < 16; i++) {
+            Tile tile1 = remainingTiles.get(i);
+            Tile tile2 = remainingTiles.get(i + 1);
+
+            // check for two related tiles of same type
+            TileType tileType = tile1.getTileType();
+            if (tileType == tile2.getTileType() && tileType.getClassification() == TileClassification.REGULAR) {
+                int ord1 = tile1.ordinal();
+                int ord2 = tile2.ordinal();
+
+                if ((ord2 == ord1 + 1) || (ord2 == ord1 + 2)) {
+                    return;
+                }
+            }
+
+            // check for two identical tiles
+            if (tile1 == tile2) {
+                // checks if there is more than one pair
+                if (!pairGroup.isEmpty()) return;
+                // pair is found so set flag to true
+                pairGroup = List.of(tile1, tile2);
+            } else if (!pairGroup.contains(tile1)) {
+                disjointGroup.add(tile1);
+            }
+        }
+
+        if (disjointGroup.size() == 14) disjointGroup.add(remainingTiles.get(16));
+
+        // safety check
+        if (disjointGroup.size() != 15 || pairGroup.size() != 2) return;
+
+        // build builder to build the build
+        if (pairGroup.contains(winningTile)) {
+            builder.setWinningGroup(pairGroup);
+            builder.setWinningGroupType(MeldType.PAIR);
+
+            builder.addConcealedGroup(disjointGroup);
+        } else {
+            builder.setWinningGroup(disjointGroup);
+            builder.setWinningGroupType(MeldType.SIXTEEN_DISJOINT);
+
+            builder.addConcealedGroup(pairGroup);
+        }
+
+        groupings.add(builder);
     }
 
     private static void getLikKuLikKuGroupings(List<GroupedHandBuilder> groupings,
                                                List<Tile> concealedTiles,
-                                               Tile winningTile) {
+                                               Tile winningTile,
+                                               GroupedHandBuilder builder) {
+        int numTiles = concealedTiles.size();
+        if (numTiles < 3) return;
 
+        // base case: 3 tiles left
+        if (numTiles == 3) {
+            List<Tile> group = List.of(concealedTiles.get(0), concealedTiles.get(1), concealedTiles.get(2));
+            if (HandChecker.isValidGroup(group)
+                    && (winningTile == null || concealedTiles.get(0) == winningTile)) {
+                if (winningTile == null) {
+                    // form group with last three tiles
+                    builder.addConcealedGroup(group);
+                    groupings.add(new GroupedHandBuilder(builder));
+                    builder.backtrack();
+                } else {
+                    // form group and use as the winning group
+                    setWinningGroup(builder, group, HandChecker.checkGroupType(group));
+                    groupings.add(new GroupedHandBuilder(builder));
+                    unsetWinningGroup(builder);
+                }
+            }
+            return;
+        }
+
+        List<List<Tile>> seenGroups = new ArrayList<>();
+
+        // recursion: form a group of 2 then check remaining tiles
+        for (int i = 0; i < numTiles - 2; i++) {
+            Tile t1 = concealedTiles.get(i);
+
+            for (int j = i + 1; j < numTiles - 1; j++) {
+                Tile t2 = concealedTiles.get(j);
+                if (t1 != t2) continue;
+
+                List<Tile> pair = List.of(t1, t2);
+                if (!seenGroups.contains(pair)) {
+                    seenGroups.add(pair);
+
+                    // recurse with pair removed
+                    List<Tile> newConcealedTiles = new ArrayList<>(concealedTiles);
+                    newConcealedTiles.remove(t1);
+                    newConcealedTiles.remove(t2);
+
+                    if (t1 == winningTile) {
+                        // option 1: use this group as winning group
+                        setWinningGroup(builder, pair, MeldType.PAIR);
+                        getLikKuLikKuGroupings(groupings, newConcealedTiles, null, builder);
+                        unsetWinningGroup(builder);
+                    } else {
+                        // option 2: use this group as non-winning group
+                        builder.addConcealedGroup(pair);
+                        getLikKuLikKuGroupings(groupings, newConcealedTiles, winningTile, builder);
+                        builder.backtrack();
+                    }
+                }
+            }
+        }
     }
 
     private static void setWinningGroup(GroupedHandBuilder builder, List<Tile> group, MeldType type) {
@@ -183,7 +344,8 @@ public class HandGrouper {
     /**
      * Creates a list of the given tiles, sorted from least to most important.
      * This information can be used to determine which tile(s) should be discarded in optimal gameplay.
-     * @param tiles the tiles in the player's concealed hand.
+     *
+     * @param tiles          the tiles in the player's concealed hand.
      * @param discardedTiles the tiles in the discarded pile.
      * @return a list of sorted tiles.
      */
@@ -256,9 +418,10 @@ public class HandGrouper {
     /**
      * Attempt to group tiles from the ungrouped list if there are three identical instances.
      * Removes successfully grouped tiles and moves them into the grouped list.
+     *
      * @param ungroupedTiles the list of ungrouped tiles.
-     * @param groupedTiles the list of already grouped tiles.
-     * @param type the tile type to be grouped.
+     * @param groupedTiles   the list of already grouped tiles.
+     * @param type           the tile type to be grouped.
      */
     private static void groupThreeIdenticalTiles(List<Tile> ungroupedTiles, List<Tile> groupedTiles, TileType type) {
         for (int i = 0; i < ungroupedTiles.size() - 2; i++) {
@@ -276,10 +439,11 @@ public class HandGrouper {
     /**
      * Attempt to group tiles from the ungrouped list if there are two identical instances.
      * Removes successfully grouped tiles and moves them into the grouped list.
+     *
      * @param ungroupedTiles the list of ungrouped tiles.
-     * @param groupedTiles the list of already grouped tiles.
-     * @param discardList the tiles already discarded during the game.
-     * @param type the tile types to be grouped.
+     * @param groupedTiles   the list of already grouped tiles.
+     * @param discardList    the tiles already discarded during the game.
+     * @param type           the tile types to be grouped.
      * @ensures only forms groups when a Pong is still possible, i.e. not more than one instance of
      * the tile found in the discard list.
      */
@@ -299,9 +463,10 @@ public class HandGrouper {
     /**
      * Attempt to group tiles in the form n, n+1, ... , n+1, n+2 of the same type.
      * Removes successfully grouped tiles and moves them into the grouped list.
+     *
      * @param ungroupedTiles the list of ungrouped tiles.
-     * @param groupedTiles the list of already grouped tiles.
-     * @param groupSize the size of the group.
+     * @param groupedTiles   the list of already grouped tiles.
+     * @param groupSize      the size of the group.
      */
     private static void groupNNNN12(List<Tile> ungroupedTiles, List<Tile> groupedTiles, int groupSize) {
         for (int i = 0; i < ungroupedTiles.size(); i++) {
@@ -331,8 +496,9 @@ public class HandGrouper {
     /**
      * Attempt to group three consecutive tiles of the same type.
      * Removes successfully grouped tiles and moves them into the grouped list.
+     *
      * @param ungroupedTiles the list of ungrouped tiles.
-     * @param groupedTiles the list of already grouped tiles.
+     * @param groupedTiles   the list of already grouped tiles.
      */
     public static void groupThreeConsecutiveTiles(List<Tile> ungroupedTiles, List<Tile> groupedTiles) {
         for (int i = 0; i < ungroupedTiles.size() - 2; i++) {
@@ -361,8 +527,9 @@ public class HandGrouper {
     /**
      * Attempt to group two consecutive tiles of the same type.
      * Removes successfully grouped tiles and moves them into the grouped list.
+     *
      * @param ungroupedTiles the list of ungrouped tiles.
-     * @param groupedTiles the list of already grouped tiles.
+     * @param groupedTiles   the list of already grouped tiles.
      */
     private static void groupTwoConsecutiveTiles(List<Tile> ungroupedTiles, List<Tile> groupedTiles) {
         for (int i = 0; i < ungroupedTiles.size() - 1; i++) {
@@ -381,8 +548,9 @@ public class HandGrouper {
     /**
      * Attempt to group two consecutive tiles with a gap (e.g. 2 & 4, 5 & 7) of the same type.
      * Removes successfully grouped tiles and moves them into the grouped list.
+     *
      * @param ungroupedTiles the list of ungrouped tiles.
-     * @param groupedTiles the list of already grouped tiles.
+     * @param groupedTiles   the list of already grouped tiles.
      */
     private static void groupTwoTilesWithGap(List<Tile> ungroupedTiles, List<Tile> groupedTiles) {
         for (int i = 0; i < ungroupedTiles.size() - 1; i++) {

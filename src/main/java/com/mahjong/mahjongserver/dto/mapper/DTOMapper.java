@@ -33,14 +33,13 @@ public class DTOMapper {
         );
     }
 
-    public static TableDTO fromTable(Table table, Seat selfSeat, long tableVersion) {
+    public static TableDTO fromTable(Table table, Seat selfSeat) {
         Map<Seat, HandDTO> handDTOs = new EnumMap<>(Seat.class);
         for (Seat seat : Seat.values()) {
             handDTOs.put(seat, fromHand(table.getHand(seat), seat == null || seat == selfSeat));
         }
 
         return new TableDTO(
-                tableVersion,
                 table.getBoard().getDiscardPile(),
                 table.getBoard().getDrawPileSize(),
                 selfSeat,
@@ -77,8 +76,8 @@ public class DTOMapper {
         );
     }
 
-    public static GameStateDTO fromGame(Game game, Seat seat, long gameStateVersion, long tableVersion) {
-        TableDTO tableDTO = fromTable(game.getTable(), seat, tableVersion);
+    public static GameStateDTO fromGame(Game game, Seat seat, long gameStateVersion) {
+        TableDTO tableDTO = fromTable(game.getTable(), seat);
 
         // determine if the player has a drawn tile
         Tile drawnTile = null;
@@ -111,6 +110,7 @@ public class DTOMapper {
         }
 
         return new GameStateDTO(
+                game.getGameNum(),
                 gameStateVersion,
                 tableDTO,
                 game.getCurrentSeat(),
@@ -124,7 +124,8 @@ public class DTOMapper {
                 drawnTile,
                 game.isActiveGame(),
                 game.getWinnerSeats(),
-                game.getNumDraws()
+                game.getNumDraws(),
+                game.getBoard().getNumDrawsLeft()
         );
     }
 }

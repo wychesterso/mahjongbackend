@@ -17,7 +17,7 @@ public class TaiwaneseSixteenScoreCalculator implements ScoreCalculator {
 
 //============================== ENTRY POINT ==============================//
 
-    public ScoringContext calculateScore(Game game, Seat winnerSeat) {
+    public ScoringContext calculateScore(Game game, Seat winnerSeat, int lumZhongCount) {
         // get table and hand
         Table table = game.getTable();
         Hand hand = table.getHand(winnerSeat);
@@ -25,6 +25,12 @@ public class TaiwaneseSixteenScoreCalculator implements ScoreCalculator {
         // get all valid groupings for concealed tiles
         List<Tile> concealedTiles = hand.getConcealedTiles();
         List<GroupedHandBuilder> groupings = HandGrouper.getValidGroupings(concealedTiles, game.getWinningTile());
+        if (groupings.isEmpty()) {
+            // crash out
+            System.out.println("[ScoreCalculator] No groupings found!");
+            System.out.println("concealedTiles: " + concealedTiles + ", winningTile: " + game.getWinningTile());
+            throw new IllegalStateException();
+        }
 
         ScoringContext bestScoringContext = null;
 
@@ -32,7 +38,7 @@ public class TaiwaneseSixteenScoreCalculator implements ScoreCalculator {
         for (GroupedHandBuilder builder : groupings) {
             GroupedHand groupedHand = new GroupedHand(builder, hand, game.getCurrentSeat() == winnerSeat);
 
-            ScoringContext scoringContext = new ScoringContext(game, winnerSeat, groupedHand);
+            ScoringContext scoringContext = new ScoringContext(game, winnerSeat, lumZhongCount, groupedHand);
             calculateScoreForGrouping(scoringContext);
 
             if (bestScoringContext == null || scoringContext.getScore() > bestScoringContext.getScore()) {
@@ -51,6 +57,10 @@ public class TaiwaneseSixteenScoreCalculator implements ScoreCalculator {
             new GameActionMatcher(),
             new FirstDiscardsMatcher(),
             new RemainingTilesMatcher(),
+
+            new ThirteenWondersMatcher(),
+            new SixteenDisjointMatcher(),
+            new LikKuLikKuMatcher(),
 
             new KongMatcher(),
             new WindTileMatcher(),

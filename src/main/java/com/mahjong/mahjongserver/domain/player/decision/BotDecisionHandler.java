@@ -7,6 +7,7 @@ import com.mahjong.mahjongserver.domain.room.Room;
 import com.mahjong.mahjongserver.domain.room.Seat;
 import com.mahjong.mahjongserver.domain.room.board.tile.Tile;
 import com.mahjong.mahjongserver.dto.response.DiscardResponseDTO;
+import com.mahjong.mahjongserver.dto.state.GameStateDTO;
 import com.mahjong.mahjongserver.dto.state.TableDTO;
 
 import java.util.ArrayList;
@@ -31,25 +32,34 @@ public class BotDecisionHandler implements PlayerDecisionHandler {
     }
 
     @Override
-    public void promptDecisionOnDraw(PlayerContext ctx, TableDTO table, Tile drawnTile, List<Decision> availableOptions) {
+    public void promptDecisionOnDraw(PlayerContext ctx, GameStateDTO state, Tile drawnTile,
+                                     List<Decision> availableOptions, List<Tile> availableBrightKongs,
+                                     List<Tile> availableDarkKongs) {
+        TableDTO table = state.table();
+
         runBotDelayed(() -> {
             Decision decision = Decision.PASS;
+            Tile kongTile = null;
 
             if (availableOptions.contains(Decision.WIN) && decideWin(ctx, table, drawnTile, table.selfSeat())) {
                 decision = Decision.WIN;
             } else if (availableOptions.contains(Decision.DARK_KONG) && decideKong(ctx, table, drawnTile, table.selfSeat())) {
                 decision = Decision.DARK_KONG;
+                kongTile = availableDarkKongs.getFirst();
             } else if (availableOptions.contains(Decision.BRIGHT_KONG) && decideKong(ctx, table, drawnTile, table.selfSeat())) {
                 decision = Decision.BRIGHT_KONG;
+                kongTile = availableBrightKongs.getFirst();
             }
 
-            gameService.handleDrawClaim(ctx.getRoomId(), ctx.getPlayer().getId(), decision);
+            gameService.handleDrawClaim(ctx.getRoomId(), ctx.getPlayer().getId(), decision, kongTile);
         });
     }
 
     @Override
-    public void promptDecisionOnDiscard(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder,
+    public void promptDecisionOnDiscard(PlayerContext ctx, GameStateDTO state, Tile discardedTile, Seat discarder,
                                         List<Decision> availableOptions, List<List<Tile>> sheungCombos) {
+        TableDTO table = state.table();
+
         runBotDelayed(() -> {
             Decision decision = Decision.PASS;
             List<Tile> sheungCombo = null;
@@ -72,7 +82,9 @@ public class BotDecisionHandler implements PlayerDecisionHandler {
     }
 
     @Override
-    public void promptDiscard(PlayerContext ctx, TableDTO table) {
+    public void promptDiscard(PlayerContext ctx, GameStateDTO state) {
+        TableDTO table = state.table();
+
         runBotDelayed(() -> {
             List<Tile> concealedTiles = table.hands().get(table.selfSeat()).concealedTiles();
             Tile tileToDiscard = HandGrouper.getTilesToDiscard(concealedTiles, table.discardPile()).getFirst();
@@ -86,9 +98,9 @@ public class BotDecisionHandler implements PlayerDecisionHandler {
     }
 
     @Override
-    public void promptDiscardOnDraw(PlayerContext ctx, TableDTO table, Tile drawnTile) {
+    public void promptDiscardOnDraw(PlayerContext ctx, GameStateDTO state, Tile drawnTile) {
         // we don't care which tile was drawn
-        promptDiscard(ctx, table);
+        promptDiscard(ctx, state);
     }
 
     @Override

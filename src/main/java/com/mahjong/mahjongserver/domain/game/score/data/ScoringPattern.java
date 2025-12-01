@@ -107,7 +107,7 @@ public enum ScoringPattern {
     // ==================== FORTY POINT PATTERNS ====================
     FIVE_ENCOUNTERS("五同順", "Five Sheungs of same numbers", 40),
     BIG_THREE_DRAGONS("大三元", "Contains three Pongs/Kongs of the three Dragon tiles", 40),
-    SIXTEEN_ORPHANS("十六不搭", "Sixteen tiles that cannot form any group with one another, with one duplicate tile", 40),
+    SIXTEEN_DISJOINT("十六不搭", "Sixteen tiles that cannot form any group with one another, with one duplicate tile", 40),
     LIK_KU_LIK_KU("嚦咕嚦咕", "Seven pairs and one Pong, all concealed", 40),
 
     // ==================== SIXTY POINT PATTERNS ====================

@@ -8,6 +8,7 @@ import com.mahjong.mahjongserver.dto.prompt.DiscardAfterDrawPromptDTO;
 import com.mahjong.mahjongserver.dto.prompt.DecisionOnDiscardPromptDTO;
 import com.mahjong.mahjongserver.dto.prompt.DecisionOnDrawPromptDTO;
 import com.mahjong.mahjongserver.dto.prompt.DiscardPromptDTO;
+import com.mahjong.mahjongserver.dto.state.GameStateDTO;
 import com.mahjong.mahjongserver.dto.state.TableDTO;
 import com.mahjong.mahjongserver.domain.core.GameEventPublisher;
 import org.springframework.stereotype.Component;
@@ -25,39 +26,41 @@ public class RealPlayerDecisionHandler implements PlayerDecisionHandler {
     }
 
     @Override
-    public void promptDecisionOnDraw(PlayerContext ctx, TableDTO table, Tile drawnTile, List<Decision> availableOptions) {
+    public void promptDecisionOnDraw(PlayerContext ctx, GameStateDTO state, Tile drawnTile,
+                                     List<Decision> availableOptions, List<Tile> availableBrightKongs,
+                                     List<Tile> availableDarkKongs) {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
                 "prompt_draw_decision",
-                new DecisionOnDrawPromptDTO(table, drawnTile, availableOptions)
+                new DecisionOnDrawPromptDTO(state, drawnTile, availableOptions, availableBrightKongs, availableDarkKongs)
         );
     }
 
     @Override
-    public void promptDecisionOnDiscard(PlayerContext ctx, TableDTO table, Tile discardedTile, Seat discarder,
-                                      List<Decision> availableOptions, List<List<Tile>> sheungCombos) {
+    public void promptDecisionOnDiscard(PlayerContext ctx, GameStateDTO state, Tile discardedTile, Seat discarder,
+                                        List<Decision> availableOptions, List<List<Tile>> sheungCombos) {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
                 "prompt_discard_decision",
-                new DecisionOnDiscardPromptDTO(table, discardedTile, discarder, availableOptions, sheungCombos)
+                new DecisionOnDiscardPromptDTO(state, discardedTile, discarder, availableOptions, sheungCombos)
         );
     }
 
     @Override
-    public void promptDiscard(PlayerContext ctx, TableDTO table) {
+    public void promptDiscard(PlayerContext ctx, GameStateDTO state) {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
                 "prompt_discard",
-                new DiscardPromptDTO(table)
+                new DiscardPromptDTO(state)
         );
     }
 
     @Override
-    public void promptDiscardOnDraw(PlayerContext ctx, TableDTO table, Tile drawnTile) {
+    public void promptDiscardOnDraw(PlayerContext ctx, GameStateDTO state, Tile drawnTile) {
         publisher.sendPrompt(
                 ctx.getPlayer().getId(),
                 "prompt_discard_on_draw",
-                new DiscardAfterDrawPromptDTO(table, drawnTile)
+                new DiscardAfterDrawPromptDTO(state, drawnTile)
         );
     }
 

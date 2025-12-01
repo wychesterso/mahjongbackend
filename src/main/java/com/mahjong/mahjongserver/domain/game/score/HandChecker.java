@@ -50,6 +50,19 @@ public class HandChecker {
         return false;
     }
 
+    public static List<Tile> getDarkKongOptions(Hand hand) {
+        List<Tile> options = new ArrayList<>();
+
+        Map<Tile, Integer> tileCounts = new HashMap<>();
+        for (Tile tile : hand.getConcealedTiles()) {
+            int newCount = tileCounts.getOrDefault(tile, 0) + 1;
+            if (newCount == 4) options.add(tile);
+            tileCounts.put(tile, newCount);
+        }
+
+        return options;
+    }
+
     public static boolean checkBrightKong(Hand hand) {
         for (List<Tile> pong : hand.getPongs()) {
             Tile tile = pong.getFirst();
@@ -66,6 +79,18 @@ public class HandChecker {
             }
         }
         return false;
+    }
+
+    public static List<Tile> getBrightKongOptions(Hand hand) {
+        List<Tile> options = new ArrayList<>();
+
+        Set<Tile> candidates = new HashSet<>(hand.getConcealedTiles());
+        for (List<Tile> pong : hand.getPongs()) {
+            Tile tile = pong.getFirst();
+            if (candidates.contains(tile)) options.add(tile);
+        }
+
+        return options;
     }
 
     public static boolean checkPong(Hand hand, Tile discardedTile) {
@@ -336,59 +361,10 @@ public class HandChecker {
                 }
             }
 
-            // if isValidGroup && loneTile in thirteenOrphans, return true
+            if (isValidGroup(group) && thirteenOrphans.contains(loneTile)) return true;
         }
 
         return false;
-
-//        List<List<Tile>> groups = new ArrayList<>();
-//
-//        // check every combination of three tiles
-//        for (int i = 0; i < 4; i++) {
-//            for (int j = i + 1; j < 4; j++) {
-//                for (int k = j + 1; k < 4; k++) {
-//                    Tile tile1 = remainingTiles.get(i);
-//                    Tile tile2 = remainingTiles.get(j);
-//                    Tile tile3 = remainingTiles.get(k);
-//
-//                    // check for three identical tiles
-//                    if (tile1 == tile2 && tile2 == tile3) {
-//                        groups.add(new ArrayList<>(List.of(tile1, tile2, tile3)));
-//                    }
-//
-//                    // check for three consecutive tiles of same type
-//                    if (tile1.getTileType() == tile2.getTileType()
-//                            && tile2.getTileType() == tile3.getTileType()) {
-//                        int ord1 = tile1.ordinal();
-//                        int ord2 = tile2.ordinal();
-//                        int ord3 = tile3.ordinal();
-//
-//                        if ((ord2 == ord1 + 1 && ord3 == ord2 + 1)
-//                                || (ord3 == ord1 + 1 && ord2 == ord3 + 1)
-//                                || (ord1 == ord2 + 1 && ord3 == ord1 + 1)) {
-//                            groups.add(new ArrayList<>(List.of(tile1, tile2, tile3)));
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//
-//        // checks if there are valid groups
-//        if (groups.isEmpty()) {
-//            return false;
-//        }
-//
-//        // for every group, check if the tile not used is one of the required tiles
-//        for (List<Tile> group : groups) {
-//            List<Tile> leftoverTiles = new ArrayList<>(remainingTiles);
-//            for (Tile tile : group) {
-//                leftoverTiles.remove(tile);
-//            }
-//            if (thirteenOrphans.contains(leftoverTiles.getFirst())) {
-//                return true;
-//            }
-//        }
-//        return false;
     }
 
     /**

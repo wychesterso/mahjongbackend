@@ -58,6 +58,8 @@ public class GroupedHand {
                 }
             }
             case 4 -> {addMeldKnownType(group, MeldType.KONG, isRevealed);}
+            case 12 -> {addMeldKnownType(group, MeldType.THIRTEEN_ORPHANS, isRevealed);}
+            case 15 -> {addMeldKnownType(group, MeldType.SIXTEEN_DISJOINT, isRevealed);}
             default -> {addMeldKnownType(group, MeldType.OTHER, isRevealed);}
         }
     }
@@ -262,6 +264,22 @@ public class GroupedHand {
 
     // =============== OTHERS ===============
 
+    public List<Meld> getThirteenOrphanGroups() {
+        return meldsByMeldType.get(MeldType.THIRTEEN_ORPHANS);
+    }
+
+    public int numThirteenOrphanGroups() {
+        return getThirteenOrphanGroups().size();
+    }
+
+    public List<Meld> getSixteenDisjointGroups() {
+        return meldsByMeldType.get(MeldType.SIXTEEN_DISJOINT);
+    }
+
+    public int numSixteenDisjointGroups() {
+        return getSixteenDisjointGroups().size();
+    }
+
     public List<Meld> getWeirdMelds() {
         return meldsByMeldType.get(MeldType.OTHER);
     }
@@ -347,6 +365,7 @@ public class GroupedHand {
         return getAllMelds()
                 .stream()
                 .filter(m -> !m.isRevealed())
+                .sorted(Comparator.comparing(m -> m.getMeldType() == MeldType.PAIR))
                 .toList();
     }
 
@@ -357,7 +376,8 @@ public class GroupedHand {
     public List<Meld> getRevealedMelds() {
         return getAllMelds()
                 .stream()
-                .filter(m -> m.isRevealed())
+                .filter(Meld::isRevealed)
+                .sorted(Comparator.comparing(m -> m.getMeldType() == MeldType.PAIR))
                 .toList();
     }
 
